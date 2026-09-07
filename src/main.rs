@@ -20,12 +20,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[repr(u8)]
 pub enum NesMirroring {
-    Horizontal,  // h
-    Vertical,    // v
-    ScreenAOnly, // 0
-    ScreenBOnly, // 1
-    FourScreens, // 4
+    Horizontal = b'h',
+    Vertical = b'v',
+    ScreenAOnly = b'0',
+    ScreenBOnly= b'1',
+    FourScreens = b'4',
     #[default]
     Unspecified,
 }
