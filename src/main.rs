@@ -1,6 +1,6 @@
 use csv::StringRecord;
 
-const DB_FILE: &'static [u8] = include_bytes!("./MesenNesDB.txt");
+const DB_FILE: &[u8] = include_bytes!("./MesenNesDB.txt");
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
@@ -20,12 +20,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum NesMirroring {
     Horizontal,  // h
     Vertical,    // v
     ScreenAOnly, // 0
     ScreenBOnly, // 1
     FourScreens, // 4
+    #[default]
     Unspecified,
 }
 
@@ -45,15 +47,12 @@ impl From<&str> for NesMirroring {
     }
 }
 
-impl Default for NesMirroring {
-    fn default() -> Self {
-        Self::Unspecified
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[derive(Default)]
 pub enum NesInputType {
+    #[default]
     Unspecified = 0,
     StandardControllers = 1,
     FourScore = 2,
@@ -187,13 +186,9 @@ impl From<&str> for NesInputType {
     }
 }
 
-impl Default for NesInputType {
-    fn default() -> Self {
-        Self::Unspecified
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum GameSystem {
     NesNtsc,
     NesPal,
@@ -211,14 +206,10 @@ pub enum GameSystem {
     Vt09,
     Vt32,
     Vt369,
+    #[default]
     Unknown,
 }
 
-impl Default for GameSystem {
-    fn default() -> Self {
-        Self::Unknown
-    }
-}
 
 impl From<&str> for GameSystem {
     fn from(value: &str) -> Self {
@@ -247,7 +238,9 @@ impl From<&str> for GameSystem {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[derive(Default)]
 pub enum VsSystemType {
+    #[default]
     Default = 0,
     RbiBaseballProtection = 1,
     TkoBoxingProtection = 2,
@@ -257,11 +250,6 @@ pub enum VsSystemType {
     RaidOnBungelingBayProtection = 6,
 }
 
-impl Default for VsSystemType {
-    fn default() -> Self {
-        Self::Default
-    }
-}
 
 impl From<&str> for VsSystemType {
     fn from(value: &str) -> Self {
@@ -283,7 +271,9 @@ impl From<&str> for VsSystemType {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
+#[derive(Default)]
 pub enum PpuModel {
+    #[default]
     Ppu2C02 = 0,
     Ppu2C03 = 1,
     Ppu2C04A = 2,
@@ -297,11 +287,6 @@ pub enum PpuModel {
     Ppu2C05E = 10,
 }
 
-impl Default for PpuModel {
-    fn default() -> Self {
-        Self::Ppu2C02
-    }
-}
 
 impl From<&str> for PpuModel {
     fn from(value: &str) -> Self {
@@ -326,17 +311,14 @@ impl From<&str> for PpuModel {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum BusConflict {
     Yes,
     No,
+    #[default]
     Unspecified,
 }
 
-impl Default for BusConflict {
-    fn default() -> Self {
-        Self::Unspecified
-    }
-}
 
 impl From<&str> for BusConflict {
     fn from(value: &str) -> Self {
@@ -450,7 +432,7 @@ fn to_size(value: &str) -> Option<u32> {
         return None;
     }
     if value.starts_with("b") {
-        return value[1..].parse::<u32>().ok();
+        return value.strip_prefix("b").and_then(|v| v.parse::<u32>().ok())
     }
     value.parse::<u32>().ok().map(|v| v * 1024)
 }
