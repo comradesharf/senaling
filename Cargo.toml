@@ -1,7 +1,9 @@
 [workspace]
 resolver = "3"
 members = [
-    "cargo/senaling-core", "cargo/senaling-swift-binding", "cargo/uniffi-bindgen",
+    "cargo/senaling-core",
+    "cargo/senaling-binding",
+    "cargo/uniffi-bindgen",
 ]
 
 [workspace.package]

@@ -1,5 +1,5 @@
 [package]
-name = "senaling-swift-binding"
+name = "senaling-binding"
 edition.workspace = true
 version.workspace = true
 
@@ -7,5 +7,5 @@ version.workspace = true
 uniffi.workspace = true
 
 [lib]
-name = "senaling_swift_binding"
+name = "senaling_binding"
 crate-type = ["cdylib"]
