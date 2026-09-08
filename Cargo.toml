@@ -2,6 +2,10 @@
 name = "senaling"
 version = "0.1.0"
 edition = "2024"
+build = "./build.rs"
+
+[lib]
+crate-type = ["cdylib"]
 
 [dependencies]
 anyhow = "1.0.104"
@@ -10,3 +14,5 @@ csv = "1.4.0"
 env_logger = "0.11.11"
 log = "0.4.34"
 
+[build-dependencies]
+cbindgen = "0.29.4"

@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+#[repr(C)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RomFile {
     filename: OsString,
@@ -39,15 +40,11 @@ impl RomFile {
         })
     }
 
-    pub fn is_valid(&self) -> bool {
-        self.data.len() > 0
-    }
-
     pub fn size(&self) -> usize {
         self.data.len()
     }
 
-    pub fn check_signature(&self, signatures: Vec<&[u8]>) -> Result<()> {
+    fn check_signature(&self, signatures: Vec<&[u8]>) -> Result<()> {
         if self.data.len() < 4 {
             return Err(anyhow!("ROM file is too small to contain a valid header"));
         }
@@ -77,7 +74,6 @@ mod test {
             OsString::from("Super Mario Bros. 3 (USA) (Rev 1)")
         );
         assert_eq!(rom_file.extension, OsString::from("nes"));
-        assert_eq!(rom_file.is_valid(), true);
         assert_eq!(rom_file.size(), 393232);
         assert_eq!(
             rom_file
