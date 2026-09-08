@@ -16,4 +16,4 @@ name = "senaling"
 [workspace.dependencies]
 anyhow = "1.0.104"
 log = "0.4.34"
-uniffi = { version = "0.32.0", features = ["build", "cli"] }
+uniffi = { version = "0.32.0", features = ["cli"] }
