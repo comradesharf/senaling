@@ -1,4 +1,6 @@
 mod game_info;
+mod rom_file;
+mod emulator;
 
 use anyhow::Result;
 
