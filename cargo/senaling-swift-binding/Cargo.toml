@@ -1,0 +1,11 @@
+[package]
+name = "senaling-swift-binding"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+uniffi.workspace = true
+
+[lib]
+name = "senaling_swift_binding"
+crate-type = ["cdylib"]

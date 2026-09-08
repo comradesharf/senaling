@@ -1,0 +1,9 @@
+[package]
+name = "senaling-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+csv = "1.4.0"
+anyhow.workspace = true
+log.workspace = true
