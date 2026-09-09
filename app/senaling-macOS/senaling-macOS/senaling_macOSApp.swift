@@ -16,7 +16,7 @@ struct senaling_macOSApp: App {
     ])
     let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
-    add(left: 1, right: 2)
+    print("added value: \( add(left: 1, right: 2))", )
 
     do {
       return try ModelContainer(for: schema, configurations: [modelConfiguration])

@@ -1,0 +1,6 @@
+{
+  "name": "senaling-binding-swift",
+  "scripts": {
+    "build": "./build.sh"
+  }
+}
