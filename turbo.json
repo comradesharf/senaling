@@ -4,5 +4,9 @@
   "futureFlags": {
     "experimentalCargoWorkspaces": true
   },
-  "tasks": {}
+  "tasks": {
+    "//#fix": {
+      "cache": false
+    }
+  }
 }

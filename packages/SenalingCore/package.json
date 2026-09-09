@@ -1,5 +1,5 @@
 {
-  "name": "senaling-binding-swift",
+  "name": "senaling-core-swift",
   "scripts": {
     "build": "./build.sh"
   }

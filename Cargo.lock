@@ -420,19 +420,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "senaling-binding"
-version = "0.1.0"
-dependencies = [
- "uniffi",
-]
-
-[[package]]
 name = "senaling-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "csv",
  "log",
+ "uniffi",
 ]
 
 [[package]]

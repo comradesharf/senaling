@@ -1,3 +1,6 @@
-mod emulator;
-mod game_info;
-mod rom_file;
+uniffi::setup_scaffolding!();
+
+mod nes;
+pub mod rom_file;
+pub mod shared;
+mod test;

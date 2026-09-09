@@ -4,25 +4,25 @@
 import PackageDescription
 
 let package = Package(
-  name: "SenalingBinding",
+  name: "SenalingCore",
   platforms: [
     .macOS(.v15)
   ],
   products: [
     .library(
-      name: "SenalingBinding",
-      targets: ["SenalingBinding"]
+      name: "SenalingCore",
+      targets: ["SenalingCore"]
     )
   ],
   targets: [
     .binaryTarget(
-      name: "SenalingBindingFFI",
-      path: "Frameworks/SenalingBindingFFI.xcframework"
+      name: "SenalingCoreFFI",
+      path: "Frameworks/SenalingCoreFFI.xcframework"
     ),
     .target(
-      name: "SenalingBinding",
-      dependencies: ["SenalingBindingFFI"],
-      path: "Sources/SenalingBinding"
+      name: "SenalingCore",
+      dependencies: ["SenalingCoreFFI"],
+      path: "Sources/SenalingCore"
     ),
   ]
 )

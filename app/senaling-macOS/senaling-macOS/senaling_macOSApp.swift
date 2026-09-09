@@ -5,9 +5,9 @@
 //  Created by Hishammuddin Sani on 08/09/2026.
 //
 
+import SenalingCore
 import SwiftData
 import SwiftUI
-import SenalingBinding
 
 @main
 struct senaling_macOSApp: App {
@@ -16,8 +16,6 @@ struct senaling_macOSApp: App {
       Item.self
     ])
     let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-      
-    print("added value: \(SenalingBinding.add(left: 1, right: 2))", )
 
     do {
       return try ModelContainer(for: schema, configurations: [modelConfiguration])
