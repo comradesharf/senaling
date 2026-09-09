@@ -1,32 +1,34 @@
 use csv::StringRecord;
 
+use anyhow::{Context, Result, anyhow};
+
 const DB_FILE: &[u8] = include_bytes!("./MesenNesDB.txt");
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    env_logger::init();
-
+pub fn read_database() -> Result<Vec<GameInfo>> {
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
         .comment(Some(b'#'))
         .trim(csv::Trim::Fields)
         .from_reader(DB_FILE);
 
-    for record in reader.records() {
-        let game_info: GameInfo = (&record?).into();
-        log::info!("Parsed game info: {:?}", game_info);
-    }
-
-    Ok(())
+    reader
+        .records()
+        .map(|record| {
+            record
+                .map_err(|e| anyhow!("Failed to read record: {}", e))
+                .and_then(|record| (&record).try_into())
+        })
+        .collect()
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[repr(u8)]
 pub enum NesMirroring {
-    Horizontal,  // h
-    Vertical,    // v
-    ScreenAOnly, // 0
-    ScreenBOnly, // 1
-    FourScreens, // 4
+    Horizontal = b'h',
+    Vertical = b'v',
+    ScreenAOnly = b'0',
+    ScreenBOnly = b'1',
+    FourScreens = b'4',
     #[default]
     Unspecified,
 }
@@ -46,7 +48,6 @@ impl From<&str> for NesMirroring {
         }
     }
 }
-
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -186,9 +187,7 @@ impl From<&str> for NesInputType {
     }
 }
 
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GameSystem {
     NesNtsc,
     NesPal,
@@ -210,13 +209,14 @@ pub enum GameSystem {
     Unknown,
 }
 
-
 impl From<&str> for GameSystem {
     fn from(value: &str) -> Self {
         match value {
             "Dendy" => Self::Dendy,
             "FamicloneDecimal" => Self::FamicloneDecimal,
             "Famicom" => Self::Famicom,
+            "FamicomNetworkSystem" => Self::FamicomNetworkSystem,
+            "Fds" => Self::Fds,
             "NesNtsc" => Self::NesNtsc,
             "NesPal" => Self::NesPal,
             "Playchoice" => Self::Playchoice,
@@ -249,7 +249,6 @@ pub enum VsSystemType {
     VsDualSystem = 5,
     RaidOnBungelingBayProtection = 6,
 }
-
 
 impl From<&str> for VsSystemType {
     fn from(value: &str) -> Self {
@@ -287,7 +286,6 @@ pub enum PpuModel {
     Ppu2C05E = 10,
 }
 
-
 impl From<&str> for PpuModel {
     fn from(value: &str) -> Self {
         match value.parse::<u8>().ok() {
@@ -310,15 +308,13 @@ impl From<&str> for PpuModel {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BusConflict {
     Yes,
     No,
     #[default]
     Unspecified,
 }
-
 
 impl From<&str> for BusConflict {
     fn from(value: &str) -> Self {
@@ -334,7 +330,7 @@ impl From<&str> for BusConflict {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct GameInfo {
+pub struct GameInfo {
     crc: u32,
     system: GameSystem,
     board: Option<String>,
@@ -355,20 +351,23 @@ struct GameInfo {
     ppu_model: PpuModel,
 }
 
-impl From<&StringRecord> for GameInfo {
-    fn from(line: &StringRecord) -> Self {
+impl TryFrom<&StringRecord> for GameInfo {
+    type Error = anyhow::Error;
+
+    fn try_from(line: &StringRecord) -> Result<Self, Self::Error> {
         log::debug!("Parsing line: {:?}", line);
-        GameInfo {
+
+        Ok(GameInfo {
             crc: line
                 .get(0)
                 .filter(|s| !s.is_empty())
                 .and_then(|s| u32::from_str_radix(s, 16).ok())
-                .expect("Missing CRC"),
+                .with_context(|| anyhow!("Missing CRC: {}", line.get(0).unwrap_or("")))?,
             system: line
                 .get(1)
                 .filter(|s| !s.is_empty())
                 .map(|value| value.into())
-                .expect("Missing System"),
+                .with_context(|| anyhow!("Missing System: {}", line.get(1).unwrap_or("")))?,
             board: line.get(2).filter(|s| !s.is_empty()).map(str::to_owned),
             pcb: line.get(3).filter(|s| !s.is_empty()).map(str::to_owned),
             chip: line.get(4).filter(|s| !s.is_empty()).map(str::to_owned),
@@ -380,19 +379,21 @@ impl From<&StringRecord> for GameInfo {
                 .get(6)
                 .filter(|s| !s.is_empty())
                 .and_then(to_size)
-                .expect("Missing PRG ROM Size"),
+                .with_context(|| anyhow!("Missing PRG ROM Size: {}", line.get(6).unwrap_or("")))?,
             chr_rom_size: line.get(7).filter(|s| !s.is_empty()).and_then(to_size),
             chr_ram_size: line.get(8).filter(|s| !s.is_empty()).and_then(to_size),
             work_ram_size: line
                 .get(9)
                 .filter(|s| !s.is_empty())
                 .and_then(to_size)
-                .expect("Missing Work RAM Size"),
+                .with_context(|| anyhow!("Missing Work RAM Size: {}", line.get(9).unwrap_or("")))?,
             save_ram_size: line
                 .get(10)
                 .filter(|s| !s.is_empty())
                 .and_then(to_size)
-                .expect("Missing Save RAM Size"),
+                .with_context(|| {
+                    anyhow!("Missing Save RAM Size: {}", line.get(10).unwrap_or(""))
+                })?,
             has_battery: line
                 .get(11)
                 .filter(|s| !s.is_empty())
@@ -400,25 +401,24 @@ impl From<&StringRecord> for GameInfo {
             mirroring: line
                 .get(12)
                 .map(|value| value.into())
-                .expect("Missing Mirroring"),
+                .with_context(|| anyhow!("Missing Mirroring: {}", line.get(12).unwrap_or("")))?,
             input_type: line
                 .get(13)
                 .map(|value| value.into())
-                .expect("Missing Input Type"),
+                .with_context(|| anyhow!("Missing Input Type: {}", line.get(13).unwrap_or("")))?,
             bus_conflict: line
                 .get(14)
                 .map(|value| value.into())
-                .expect("Missing Bus Conflict"),
+                .with_context(|| anyhow!("Missing Bus Conflict: {}", line.get(14).unwrap_or("")))?,
             submapper_id: line.get(15).filter(|s| !s.is_empty()).map(str::to_owned),
-            vs_system_type: line
-                .get(16)
-                .map(|value| value.into())
-                .expect("Missing VS System Type"),
+            vs_system_type: line.get(16).map(|value| value.into()).with_context(|| {
+                anyhow!("Missing VS System Type: {}", line.get(16).unwrap_or(""))
+            })?,
             ppu_model: line
                 .get(17)
                 .map(|value| value.into())
-                .expect("Missing VS PPU Model"),
-        }
+                .with_context(|| anyhow!("Missing VS PPU Model: {}", line.get(17).unwrap_or("")))?,
+        })
     }
 }
 
@@ -432,7 +432,7 @@ fn to_size(value: &str) -> Option<u32> {
         return None;
     }
     if value.starts_with("b") {
-        return value.strip_prefix("b").and_then(|v| v.parse::<u32>().ok())
+        return value.strip_prefix("b").and_then(|v| v.parse::<u32>().ok());
     }
     value.parse::<u32>().ok().map(|v| v * 1024)
 }
@@ -476,9 +476,29 @@ mod tests {
 
     #[test]
     fn test_game_system() {
-        assert_eq!(GameSystem::from("NesNtsc"), GameSystem::NesNtsc);
-        assert_eq!(GameSystem::from("Famicom"), GameSystem::Famicom);
-        assert_eq!(GameSystem::from("VT369"), GameSystem::Vt369);
+        let systems = [
+            ("Dendy", GameSystem::Dendy),
+            ("FamicloneDecimal", GameSystem::FamicloneDecimal),
+            ("Famicom", GameSystem::Famicom),
+            ("FamicomNetworkSystem", GameSystem::FamicomNetworkSystem),
+            ("Fds", GameSystem::Fds),
+            ("NesNtsc", GameSystem::NesNtsc),
+            ("NesPal", GameSystem::NesPal),
+            ("Playchoice", GameSystem::Playchoice),
+            ("UM6578", GameSystem::Um6578),
+            ("VT01RedCyan", GameSystem::Vt01RedCyan),
+            ("VT02", GameSystem::Vt02),
+            ("VT03", GameSystem::Vt03),
+            ("VT09", GameSystem::Vt09),
+            ("VT32", GameSystem::Vt32),
+            ("VT369", GameSystem::Vt369),
+            ("VsSystem", GameSystem::VsSystem),
+        ];
+
+        for (value, expected) in systems {
+            assert_eq!(GameSystem::from(value), expected);
+        }
+
         assert_eq!(GameSystem::from("unknown"), GameSystem::Unknown);
     }
 
@@ -503,7 +523,7 @@ mod tests {
 
     #[test]
     fn test_game_info_from_record() {
-        let record = StringRecord::from(vec![
+        let record = &StringRecord::from(vec![
             "1A2B3C4D",
             "Famicom",
             "HVC-TLROM",
@@ -524,7 +544,7 @@ mod tests {
             "10",
         ]);
 
-        let game_info = GameInfo::from(&record);
+        let game_info: GameInfo = record.try_into().unwrap();
 
         assert_eq!(
             game_info,
