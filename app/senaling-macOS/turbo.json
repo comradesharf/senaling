@@ -6,12 +6,7 @@
   "tasks": {
     "build": {
       "dependsOn": [
-        "senaling-binding#build"
-      ],
-      "outputs": [
-        "Frameworks",
-        "Sources",
-        ".build"
+        "senaling-binding-swift#build"
       ]
     }
   }

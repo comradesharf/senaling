@@ -6,31 +6,23 @@ import PackageDescription
 let package = Package(
   name: "SenalingBinding",
   platforms: [
-    .macOS(.v13)
+    .macOS(.v15)
   ],
   products: [
-    // Products define the executables and libraries a package produces, making them visible to other packages.
     .library(
       name: "SenalingBinding",
-      type: .dynamic,
       targets: ["SenalingBinding"]
     )
   ],
   targets: [
-    .systemLibrary(
+    .binaryTarget(
       name: "SenalingBindingFFI",
-      path: "Sources/SenalingBindingFFI"
+      path: "Frameworks/SenalingBindingFFI.xcframework"
     ),
     .target(
       name: "SenalingBinding",
       dependencies: ["SenalingBindingFFI"],
-      path: "Sources/SenalingBinding",
-      linkerSettings: [
-        .unsafeFlags([
-          "-L", "../../target/debug",
-        ]),
-        .linkedLibrary("senaling_binding"),
-      ]
+      path: "Sources/SenalingBinding"
     ),
   ]
 )
