@@ -8,4 +8,4 @@ uniffi.workspace = true
 
 [lib]
 name = "senaling_binding"
-crate-type = ["cdylib"]
+crate-type = ["staticlib"]
