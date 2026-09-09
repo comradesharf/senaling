@@ -5,7 +5,11 @@ version.workspace = true
 
 [[bin]]
 name = "uniffi-bindgen"
-path = "src/main.rs"
+path = "uniffi_bindgen_main.rs"
+
+[[bin]]
+name = "uniffi-bindgen-swift"
+path = "uniffi_bindgen_swift.rs"
 
 [dependencies]
 uniffi = { workspace = true, features = ["cli"] }

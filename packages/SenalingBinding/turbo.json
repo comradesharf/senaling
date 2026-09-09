@@ -1,0 +1,18 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "senaling-binding#build"
+      ],
+      "outputs": [
+        "Frameworks",
+        "Sources",
+        ".build"
+      ]
+    }
+  }
+}

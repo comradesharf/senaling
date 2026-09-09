@@ -1,0 +1,6 @@
+{
+  "name": "senaling-macos",
+  "scripts": {
+    "build": "./build.sh"
+  }
+}
