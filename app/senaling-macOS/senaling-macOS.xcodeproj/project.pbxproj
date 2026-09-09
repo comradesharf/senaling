@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0D8F7D1430510A0F005320D2 /* senaling_binding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8F7D1030510A0F005320D2 /* senaling_binding.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		0DCC40D53050521800240B06 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,6 +28,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0D8F7D0E3051050B005320D2 /* senaling-macOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "senaling-macOS-Bridging-Header.h"; sourceTree = "<group>"; };
+		0D8F7D1030510A0F005320D2 /* senaling_binding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = senaling_binding.swift; sourceTree = "<group>"; };
+		0D8F7D1130510A0F005320D2 /* senaling_bindingFFI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = senaling_bindingFFI.h; sourceTree = "<group>"; };
+		0D8F7D1230510A0F005320D2 /* senaling_bindingFFI.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = senaling_bindingFFI.modulemap; sourceTree = "<group>"; };
 		0DCC40C53050521700240B06 /* senaling-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "senaling-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0DCC40D43050521800240B06 /* senaling-macOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "senaling-macOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0DCC40DE3050521800240B06 /* senaling-macOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "senaling-macOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -72,13 +80,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0D8F7D1330510A0F005320D2 /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				0D8F7D1030510A0F005320D2 /* senaling_binding.swift */,
+				0D8F7D1130510A0F005320D2 /* senaling_bindingFFI.h */,
+				0D8F7D1230510A0F005320D2 /* senaling_bindingFFI.modulemap */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
 		0DCC40BC3050521700240B06 = {
 			isa = PBXGroup;
 			children = (
+				0D8F7D0E3051050B005320D2 /* senaling-macOS-Bridging-Header.h */,
 				0DCC40C73050521700240B06 /* senaling-macOS */,
 				0DCC40D73050521800240B06 /* senaling-macOSTests */,
 				0DCC40E13050521800240B06 /* senaling-macOSUITests */,
 				0DCC40C63050521700240B06 /* Products */,
+				0D8F7D1330510A0F005320D2 /* Generated */,
 			);
 			sourceTree = "<group>";
 		};
@@ -99,6 +119,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0DCC40E83050521800240B06 /* Build configuration list for PBXNativeTarget "senaling-macOS" */;
 			buildPhases = (
+				0D8F7D683051178C005320D2 /* ShellScript */,
 				0DCC40C13050521700240B06 /* Sources */,
 				0DCC40C23050521700240B06 /* Frameworks */,
 				0DCC40C33050521700240B06 /* Resources */,
@@ -231,11 +252,36 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		0D8F7D683051178C005320D2 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Generated/senaling_binding.swift",
+				"$(SRCROOT)/Generated/senaling_bindingFFI.h",
+				"$(SRCROOT)/Generated/senaling_bindingFFI.modulemap",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n\ncd \"$SRCROOT/../..\"\n\n$HOME/.cargo/bin/cargo build -p senaling-binding\n$HOME/.cargo/bin/cargo run -p uniffi-bindgen generate --library \"./target/debug/libsenaling_binding.dylib\" --out-dir \"./app/senaling-macOS/Generated\" --language swift\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		0DCC40C13050521700240B06 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0D8F7D1430510A0F005320D2 /* senaling_binding.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -404,7 +450,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../target/debug";
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lsenaling_binding";
 				PRODUCT_BUNDLE_IDENTIFIER = "comradesharf.senaling-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -412,6 +460,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "senaling-macOS-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -434,6 +483,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../../target/aarch64-apple-darwin/debug";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "comradesharf.senaling-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -442,6 +492,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "senaling-macOS-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
