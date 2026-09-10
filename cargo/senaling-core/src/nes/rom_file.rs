@@ -1,6 +1,6 @@
 use crate::shared::rom_file::{RomFile, RomFileMetadata};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct NesRomFile {
     metadata: RomFileMetadata,
 }

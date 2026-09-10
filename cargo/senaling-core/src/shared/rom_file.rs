@@ -1,8 +1,12 @@
-#[derive(Debug, Clone, PartialEq, Eq)]
+use ::safer_ffi::prelude::*;
+use std::rc::Rc;
+
+#[derive_ReprC]
 #[repr(C)]
+#[derive(Debug, Clone)]
 pub struct RomFileMetadata {
-    pub path: String,
-    pub leading_bytes: Vec<u8>,
+    pub path: repr_c::String,
+    pub leading_bytes: repr_c::Vec<u8>,
 }
 
 pub trait RomFile {
@@ -27,9 +31,10 @@ pub trait RomFile {
     }
 }
 
-#[repr(C)]
+#[derive_ReprC]
+#[repr(opaque)]
 pub struct RomFileHandle {
-    pub rom_file: Box<dyn RomFile>,
+    pub rom_file: Rc<dyn 'static + RomFile>,
 }
 
 #[cfg(test)]
@@ -53,15 +58,15 @@ mod tests {
     fn test_check_signature() {
         let rom_file = TestRomFile {
             metadata: RomFileMetadata {
-                path: String::from("test_path"),
-                leading_bytes: b"TEST LEADING".to_vec(),
+                path: "test_path".into(),
+                leading_bytes: repr_c::Vec::from(b"TEST LEADING".to_vec()),
             },
         };
         assert_eq!(rom_file.check_signature(), true);
 
         let rom_file = TestRomFile {
             metadata: RomFileMetadata {
-                leading_bytes: b"TENTH LEADING".to_vec(),
+                leading_bytes: repr_c::Vec::from(b"TENTH LEADING".to_vec()),
                 ..rom_file.metadata
             },
         };

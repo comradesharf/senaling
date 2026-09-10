@@ -1,19 +1,15 @@
 use crate::nes::rom_file::NesRomFile;
 use crate::shared::rom_file::RomFileHandle;
 pub use crate::shared::rom_file::{RomFile, RomFileMetadata};
-use crate::test::rom_file::TestRomFile;
+use ::safer_ffi::prelude::*;
+use std::rc::Rc;
 
-const ROM_FILES: &[fn(&RomFileMetadata) -> RomFileHandle] = &[
-    |metadata| RomFileHandle {
-        rom_file: Box::new(NesRomFile::new(metadata)),
-    },
-    |metadata| RomFileHandle {
-        rom_file: Box::new(TestRomFile::new(metadata)),
-    },
-];
+const ROM_FILES: &[fn(&RomFileMetadata) -> RomFileHandle] = &[|metadata| RomFileHandle {
+    rom_file: Rc::new(NesRomFile::new(metadata)),
+}];
 
-#[unsafe(no_mangle)]
-pub extern "C" fn get_rom_file(metadata: &RomFileMetadata) -> *mut RomFileHandle {
+#[ffi_export]
+pub fn get_rom_file(metadata: &RomFileMetadata) -> *mut RomFileHandle {
     ROM_FILES
         .iter()
         .find_map(|create_rom_file| {

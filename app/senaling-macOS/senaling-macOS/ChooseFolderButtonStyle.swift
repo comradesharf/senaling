@@ -5,7 +5,7 @@ struct ChooseFolderButtonStyle: ViewModifier {
   func body(content: Content) -> some View {
     if #available(macOS 26.0, *) {
       content
-        .buttonStyle(.glassProminent)
+        .buttonStyle(.borderedProminent)
         .controlSize(.large)
     } else {
       content

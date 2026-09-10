@@ -10,6 +10,15 @@ fn build_xcframework() -> Result<()> {
         return Err(anyhow!("cargo build failed with status: {}", status));
     }
 
+    let status = std::process::Command::new("cargo")
+        .args(&["run", "--bin", "generate-headers", "--features", "headers"])
+        .status()
+        .with_context(|| "Failed to execute generate headers")?;
+
+    if !status.success() {
+        return Err(anyhow!("generate headers failed with status: {}", status));
+    }
+
     std::fs::remove_dir_all("packages/SenalingCore/Frameworks/SenalingCoreFFI.xcframework")
         .or_else(|err| {
             if err.kind() == std::io::ErrorKind::NotFound {
