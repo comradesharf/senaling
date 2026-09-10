@@ -1,5 +1,3 @@
-uniffi::setup_scaffolding!();
-
 mod nes;
 pub mod rom_file;
 pub mod shared;

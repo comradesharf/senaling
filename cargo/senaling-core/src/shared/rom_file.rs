@@ -1,17 +1,13 @@
-#[derive(uniffi::Record, Debug, Clone, PartialEq, Eq)]
-#[uniffi::export(Debug, Debug, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[repr(C)]
 pub struct RomFileMetadata {
     pub path: String,
     pub leading_bytes: Vec<u8>,
 }
 
-#[uniffi::export]
-pub trait RomFile: Send + Sync {
-    fn check_signature(&self) -> bool;
-    fn metadata(&self) -> RomFileMetadata;
-}
+pub trait RomFile {
+    fn metadata(&self) -> &RomFileMetadata;
 
-pub trait BaseRomFile: RomFile {
     fn signatures(&self) -> &[&[u8]];
 
     fn max_signature_length(&self) -> usize {
@@ -31,6 +27,11 @@ pub trait BaseRomFile: RomFile {
     }
 }
 
+#[repr(C)]
+pub struct RomFileHandle {
+    pub rom_file: Box<dyn RomFile>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -40,15 +41,9 @@ mod tests {
     }
 
     impl RomFile for TestRomFile {
-        fn check_signature(&self) -> bool {
-            <Self as BaseRomFile>::check_signature(self)
+        fn metadata(&self) -> &RomFileMetadata {
+            &self.metadata
         }
-        fn metadata(&self) -> RomFileMetadata {
-            self.metadata.to_owned()
-        }
-    }
-
-    impl BaseRomFile for TestRomFile {
         fn signatures(&self) -> &[&[u8]] {
             &[b"TEST"]
         }
@@ -59,23 +54,17 @@ mod tests {
         let rom_file = TestRomFile {
             metadata: RomFileMetadata {
                 path: String::from("test_path"),
-                leading_bytes: b"TEST".to_vec(),
+                leading_bytes: b"TEST LEADING".to_vec(),
             },
         };
-        assert_eq!(
-            <TestRomFile as BaseRomFile>::check_signature(&rom_file),
-            true
-        );
+        assert_eq!(rom_file.check_signature(), true);
 
         let rom_file = TestRomFile {
             metadata: RomFileMetadata {
-                leading_bytes: b"TE".to_vec(),
+                leading_bytes: b"TENTH LEADING".to_vec(),
                 ..rom_file.metadata
             },
         };
-        assert_eq!(
-            <TestRomFile as BaseRomFile>::check_signature(&rom_file),
-            false
-        );
+        assert_eq!(rom_file.check_signature(), false);
     }
 }

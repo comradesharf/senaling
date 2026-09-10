@@ -2,9 +2,9 @@
 name = "senaling-core"
 edition.workspace = true
 version.workspace = true
+build = "build.rs"
 
 [dependencies]
-uniffi.workspace = true
 csv = "1.4.0"
 anyhow.workspace = true
 log.workspace = true
@@ -12,3 +12,7 @@ log.workspace = true
 [lib]
 name = "senaling_core"
 crate-type = ["staticlib"]
+
+[build-dependencies]
+cbindgen = "0.29.4"
+anyhow.workspace = true

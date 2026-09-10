@@ -1,21 +1,29 @@
 use crate::nes::rom_file::NesRomFile;
+use crate::shared::rom_file::RomFileHandle;
 pub use crate::shared::rom_file::{RomFile, RomFileMetadata};
 use crate::test::rom_file::TestRomFile;
-use std::sync::Arc;
 
-const ROM_FILES: &[fn(&RomFileMetadata) -> Arc<dyn RomFile>] = &[
-    |metadata| Arc::new(NesRomFile::new(metadata)),
-    |metadata| Arc::new(TestRomFile::new(metadata)),
+const ROM_FILES: &[fn(&RomFileMetadata) -> RomFileHandle] = &[
+    |metadata| RomFileHandle {
+        rom_file: Box::new(NesRomFile::new(metadata)),
+    },
+    |metadata| RomFileHandle {
+        rom_file: Box::new(TestRomFile::new(metadata)),
+    },
 ];
 
-#[uniffi::export]
-pub fn get_rom_file(metadata: &RomFileMetadata) -> Option<Arc<dyn RomFile>> {
-    ROM_FILES.iter().find_map(|create_rom_file| {
-        let rom_file = create_rom_file(metadata);
-        if rom_file.check_signature() {
-            Some(rom_file)
-        } else {
-            None
-        }
-    })
+#[unsafe(no_mangle)]
+pub extern "C" fn get_rom_file(metadata: &RomFileMetadata) -> *mut RomFileHandle {
+    ROM_FILES
+        .iter()
+        .find_map(|create_rom_file| {
+            let rom_file = create_rom_file(metadata);
+
+            if !rom_file.rom_file.check_signature() {
+                return None;
+            }
+
+            Some(Box::into_raw(Box::new(rom_file)))
+        })
+        .unwrap_or_else(std::ptr::null_mut)
 }

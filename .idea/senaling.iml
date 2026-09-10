@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/cargo/senaling-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/cargo/senaling-binding/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/cargo/uniffi-bindgen/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/cargo/xtask/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludePattern pattern=".turbo" />
     </content>

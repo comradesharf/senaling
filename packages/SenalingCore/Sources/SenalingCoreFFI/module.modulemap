@@ -1,0 +1,4 @@
+module senaling_coreFFI {
+    header "senaling_coreFFI.h"
+    export *
+}

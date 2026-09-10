@@ -1,9 +1,0 @@
-{
-  "packageManager": "pnpm@12.3.4",
-  "scripts": {
-    "fix": "swift format . --recursive --in-place"
-  },
-  "dependencies": {
-    "turbo": "2.10.12"
-  }
-}

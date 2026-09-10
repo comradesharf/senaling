@@ -1,7 +1,6 @@
-use crate::shared::rom_file::{BaseRomFile, RomFile, RomFileMetadata};
+use crate::shared::rom_file::{RomFile, RomFileMetadata};
 
-#[derive(uniffi::Record, Debug, Clone, PartialEq, Eq)]
-#[uniffi::export(Debug, Debug, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NesRomFile {
     metadata: RomFileMetadata,
 }
@@ -25,16 +24,10 @@ impl NesRomFile {
 }
 
 impl RomFile for NesRomFile {
-    fn check_signature(&self) -> bool {
-        <Self as BaseRomFile>::check_signature(self)
+    fn metadata(&self) -> &RomFileMetadata {
+        &self.metadata
     }
 
-    fn metadata(&self) -> RomFileMetadata {
-        self.metadata.to_owned()
-    }
-}
-
-impl BaseRomFile for NesRomFile {
     fn signatures(&self) -> &[&[u8]] {
         NES_SIGNATURES
     }
