@@ -5,9 +5,9 @@
 //  Created by Hishammuddin Sani on 08/09/2026.
 //
 
+import SenalingCore
 import SwiftData
 import SwiftUI
-import SenalingCore
 
 @main
 struct senaling_macOSApp: App {

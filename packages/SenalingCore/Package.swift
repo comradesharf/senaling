@@ -23,6 +23,6 @@ let package = Package(
     .binaryTarget(
       name: "SenalingCoreFFI",
       path: "Frameworks/SenalingCoreFFI.xcframework"
-    )
+    ),
   ]
 )
