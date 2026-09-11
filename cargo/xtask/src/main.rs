@@ -70,6 +70,19 @@ fn build_mac_app() -> Result<()> {
     Ok(())
 }
 
+fn test_swift() -> Result<()> {
+    let status = std::process::Command::new("swift")
+        .args(&["test", "--package-path", "./packages/SenalingCore"])
+        .status()
+        .with_context(|| "Failed to execute swift")?;
+
+    if !status.success() {
+        return Err(anyhow!("swift failed with status: {}", status));
+    }
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let command = std::env::args()
         .nth(1)
@@ -85,6 +98,7 @@ fn main() -> Result<()> {
             if !status.success() {
                 return Err(anyhow!("cargo fmt failed with status: {}", status));
             }
+
             let status = std::process::Command::new("swift")
                 .args(&["format", ".", "--recursive", "--in-place"])
                 .status()
@@ -105,6 +119,19 @@ fn main() -> Result<()> {
             build_ffi()?;
             build_xcframework()?;
             build_mac_app()?;
+        }
+        "test" => {
+            let status = std::process::Command::new("cargo")
+                .args(&["test"])
+                .status()
+                .with_context(|| "Failed to execute cargo test")?;
+
+            if !status.success() {
+                return Err(anyhow!("cargo test failed with status: {}", status));
+            }
+
+            build_xcframework()?;
+            test_swift()?;
         }
         _ => {
             return Err(anyhow!("Unknown command: {}", command));

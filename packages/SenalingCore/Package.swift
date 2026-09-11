@@ -24,5 +24,9 @@ let package = Package(
       name: "SenalingCoreFFI",
       path: "Frameworks/SenalingCoreFFI.xcframework"
     ),
+    .testTarget(
+      name: "SenalingCoreTests",
+      dependencies: ["SenalingCore"]
+    ),
   ]
 )
