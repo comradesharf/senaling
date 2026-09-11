@@ -1,4 +1,4 @@
-module senaling_coreFFI {
-    header "senaling_coreFFI.h"
+module senaling_ffi {
+    header "senaling_ffi.h"
     export *
 }

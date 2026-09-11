@@ -1,0 +1,24 @@
+[package]
+name = "senaling-ffi"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+safer-ffi = {
+    features = ["log"],
+    workspace = true
+}
+senaling-core = {
+    path = "../senaling-core",
+}
+
+[lib]
+name = "senaling_ffi"
+crate-type = ["staticlib", "lib"]
+
+[features]
+headers = ["safer-ffi/headers"]
+
+[[bin]]
+name = "generate-headers"
+required-features = ["headers"]  # Do not build unless generating headers.

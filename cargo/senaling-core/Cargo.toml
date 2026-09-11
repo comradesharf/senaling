@@ -6,18 +6,4 @@ version.workspace = true
 [dependencies]
 csv = "1.4.0"
 anyhow.workspace = true
-safer-ffi = {
-    features = ["log"],
-    workspace = true
-}
 
-[lib]
-name = "senaling_core"
-crate-type = ["staticlib", "lib"]
-
-[features]
-headers = ["safer-ffi/headers"]
-
-[[bin]]
-name = "generate-headers"
-required-features = ["headers"]  # Do not build unless generating headers.

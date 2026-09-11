@@ -306,7 +306,14 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "csv",
+]
+
+[[package]]
+name = "senaling-ffi"
+version = "0.1.0"
+dependencies = [
  "safer-ffi",
+ "senaling-core",
 ]
 
 [[package]]

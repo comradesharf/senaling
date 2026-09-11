@@ -11,10 +11,15 @@ let package = Package(
   products: [
     .library(
       name: "SenalingCore",
-      targets: ["SenalingCoreFFI"]
+      targets: ["SenalingCore"]
     )
   ],
   targets: [
+    .target(
+      name: "SenalingCore",
+      dependencies: ["SenalingCoreFFI"],
+      path: "Sources/SenalingCore"
+    ),
     .binaryTarget(
       name: "SenalingCoreFFI",
       path: "Frameworks/SenalingCoreFFI.xcframework"

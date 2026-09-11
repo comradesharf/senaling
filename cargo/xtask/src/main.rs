@@ -2,15 +2,6 @@ use anyhow::{Context, Result, anyhow};
 
 fn build_xcframework() -> Result<()> {
     let status = std::process::Command::new("cargo")
-        .args(&["build", "-p", "senaling-core"])
-        .status()
-        .with_context(|| "Failed to execute cargo build")?;
-
-    if !status.success() {
-        return Err(anyhow!("cargo build failed with status: {}", status));
-    }
-
-    let status = std::process::Command::new("cargo")
         .args(&["run", "--bin", "generate-headers", "--features", "headers"])
         .status()
         .with_context(|| "Failed to execute generate headers")?;
@@ -32,7 +23,7 @@ fn build_xcframework() -> Result<()> {
         .args(&[
             "-create-xcframework",
             "-library",
-            "target/debug/libsenaling_core.a",
+            "target/debug/libsenaling_ffi.a",
             "-headers",
             "packages/SenalingCore/Sources/SenalingCoreFFI",
             "-output",
@@ -48,9 +39,9 @@ fn build_xcframework() -> Result<()> {
     Ok(())
 }
 
-fn build_core() -> Result<()> {
+fn build_ffi() -> Result<()> {
     let status = std::process::Command::new("cargo")
-        .args(&["build", "-p", "senaling-core"])
+        .args(&["build", "-p", "senaling-ffi"])
         .status()
         .with_context(|| "Failed to execute cargo build")?;
 
@@ -85,15 +76,33 @@ fn main() -> Result<()> {
         .with_context(|| "No command provided")?;
 
     match command.as_str() {
-        "build-core" => {
-            build_core()?;
+        "format" => {
+            let status = std::process::Command::new("cargo")
+                .args(&["fmt", "--all"])
+                .status()
+                .with_context(|| "Failed to execute cargo fmt")?;
+
+            if !status.success() {
+                return Err(anyhow!("cargo fmt failed with status: {}", status));
+            }
+            let status = std::process::Command::new("swift")
+                .args(&["format", ".", "--recursive", "--in-place"])
+                .status()
+                .with_context(|| "Failed to execute swift format")?;
+
+            if !status.success() {
+                return Err(anyhow!("swift format failed with status: {}", status));
+            }
+        }
+        "build-ffi" => {
+            build_ffi()?;
         }
         "build-xcframework" => {
-            build_core()?;
+            build_ffi()?;
             build_xcframework()?;
         }
         "build-mac-app" => {
-            build_core()?;
+            build_ffi()?;
             build_xcframework()?;
             build_mac_app()?;
         }

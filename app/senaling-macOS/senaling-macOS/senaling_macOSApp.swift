@@ -7,7 +7,7 @@
 
 import SwiftData
 import SwiftUI
-import senaling_coreFFI
+import SenalingCore
 
 @main
 struct senaling_macOSApp: App {
