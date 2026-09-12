@@ -20,10 +20,7 @@ public enum SignatureCheck {
         )
       }
 
-      var emptyBufferSentinel: UInt8 = 0
-      return withUnsafePointer(to: &emptyBufferSentinel) { pointer in
-        getSignatureCheck(for: slice_ref_uint8_t(ptr: pointer, len: 0))
-      }
+      return nil
     }
   }
 

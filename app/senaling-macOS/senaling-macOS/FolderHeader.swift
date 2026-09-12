@@ -30,3 +30,11 @@ struct FolderHeader: View {
     }
   }
 }
+
+#Preview {
+  FolderHeader(
+    folderName: nil,
+    fileCount: 0,
+    chooseFolder: {}
+  )
+}
