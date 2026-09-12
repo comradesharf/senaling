@@ -1,3 +1,2 @@
-mod emulator;
-mod game_info;
-mod rom_file;
+pub mod nes;
+pub mod shared;

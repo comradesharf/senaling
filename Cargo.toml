@@ -2,8 +2,8 @@
 resolver = "3"
 members = [
     "cargo/senaling-core",
-    "cargo/senaling-binding",
-    "cargo/uniffi-bindgen",
+    "cargo/senaling-ffi",
+    "cargo/xtask",
 ]
 
 [workspace.package]
@@ -16,4 +16,4 @@ name = "senaling"
 [workspace.dependencies]
 anyhow = "1.0.104"
 log = "0.4.34"
-uniffi = { version = "0.32.0", features = ["cli"] }
+safer-ffi = "0.1.13"

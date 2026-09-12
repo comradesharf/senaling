@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		913F05683051865B00ED86D1 /* SenalingBinding in Frameworks */ = {isa = PBXBuildFile; productRef = 913F05673051865B00ED86D1 /* SenalingBinding */; };
+		0D1776F03051E23F002AF24A /* SenalingCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0D1776EF3051E23F002AF24A /* SenalingCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,7 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				913F05683051865B00ED86D1 /* SenalingBinding in Frameworks */,
+				0D1776F03051E23F002AF24A /* SenalingCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,7 +125,7 @@
 			);
 			name = "senaling-macOS";
 			packageProductDependencies = (
-				913F05673051865B00ED86D1 /* SenalingBinding */,
+				0D1776EF3051E23F002AF24A /* SenalingCore */,
 			);
 			productName = "senaling-macOS";
 			productReference = 0DCC40C53050521700240B06 /* senaling-macOS.app */;
@@ -210,7 +210,7 @@
 			mainGroup = 0DCC40BC3050521700240B06;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				913F0565305185C100ED86D1 /* XCLocalSwiftPackageReference "../../packages/SenalingBinding" */,
+				0D1776EE3051E005002AF24A /* XCLocalSwiftPackageReference "../../packages/SenalingCore" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0DCC40C63050521700240B06 /* Products */;
@@ -422,7 +422,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "";
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "comradesharf.senaling-macOS";
@@ -456,7 +456,7 @@
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "";
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "comradesharf.senaling-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -589,17 +589,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		913F0565305185C100ED86D1 /* XCLocalSwiftPackageReference "../../packages/SenalingBinding" */ = {
+		0D1776EE3051E005002AF24A /* XCLocalSwiftPackageReference "../../packages/SenalingCore" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../packages/SenalingBinding;
+			relativePath = ../../packages/SenalingCore;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		913F05673051865B00ED86D1 /* SenalingBinding */ = {
+		0D1776EF3051E23F002AF24A /* SenalingCore */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 913F0565305185C100ED86D1 /* XCLocalSwiftPackageReference "../../packages/SenalingBinding" */;
-			productName = SenalingBinding;
+			package = 0D1776EE3051E005002AF24A /* XCLocalSwiftPackageReference "../../packages/SenalingCore" */;
+			productName = SenalingCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

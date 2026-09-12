@@ -1,8 +1,0 @@
-{
-  "$schema": "https://turborepo.dev/schema.json",
-  "ui": "stream",
-  "futureFlags": {
-    "experimentalCargoWorkspaces": true
-  },
-  "tasks": {}
-}

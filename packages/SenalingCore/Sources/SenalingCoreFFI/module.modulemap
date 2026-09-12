@@ -1,0 +1,4 @@
+module senaling_ffi {
+    header "senaling_ffi.h"
+    export *
+}
