@@ -11,6 +11,7 @@ import SwiftUI
 
 @main
 struct senaling_macOSApp: App {
+
   var sharedModelContainer: ModelContainer = {
     let schema = Schema([
       Item.self
@@ -30,4 +31,10 @@ struct senaling_macOSApp: App {
     }
     .modelContainer(sharedModelContainer)
   }
+}
+
+extension EnvironmentValues {
+  @Entry var romFolderScannerStore: any IRomFolderScannerStore = RomFolderScannerStore(
+    queue: RomFolderScannerRunner(scanner: RomFolderScanner())
+  )
 }
