@@ -9,7 +9,9 @@ use anyhow::Result;
 use safer_ffi::prelude::*;
 use senaling_core::{
     nes::rom_inspector::NesRomInspector,
-    shared::rom_inspection::{FormatInfo, Identifiers, MediaType, RomInspection, RomInspector},
+    shared::rom_inspection::{
+        FileInfo, FormatInfo, Hashes, Identifiers, MediaType, RomInspection, RomInspector,
+    },
 };
 
 #[derive_ReprC]
@@ -46,15 +48,33 @@ pub enum FfiMediaType {
 #[derive_ReprC]
 #[repr(C)]
 #[derive(Debug, Clone)]
-pub struct FfiRomInspection {
-    pub file_size: u64,
+pub struct FfiFileInfo {
+    pub size: u64,
+}
+
+#[derive_ReprC]
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct FfiHashes {
     pub crc32: repr_c::String,
     pub md5: repr_c::String,
     pub sha1: repr_c::String,
     pub sha256: repr_c::String,
+}
+
+#[derive_ReprC]
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct FfiFormatInfo {
     pub container: repr_c::TaggedOption<repr_c::String>,
     pub header: repr_c::TaggedOption<repr_c::String>,
     pub media_type: FfiMediaType,
+}
+
+#[derive_ReprC]
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct FfiIdentifiers {
     pub title: repr_c::TaggedOption<repr_c::String>,
     pub serial: repr_c::TaggedOption<repr_c::String>,
     pub product_code: repr_c::TaggedOption<repr_c::String>,
@@ -62,6 +82,16 @@ pub struct FfiRomInspection {
     pub disc_id: repr_c::TaggedOption<repr_c::String>,
     pub region: repr_c::TaggedOption<repr_c::String>,
     pub revision: repr_c::TaggedOption<repr_c::String>,
+}
+
+#[derive_ReprC]
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct FfiRomInspection {
+    pub file: FfiFileInfo,
+    pub hashes: FfiHashes,
+    pub format: FfiFormatInfo,
+    pub identifiers: FfiIdentifiers,
     pub platform: repr_c::String,
 }
 
@@ -190,11 +220,61 @@ impl From<RomInspection> for FfiRomInspection {
             identifiers,
             platform,
         } = inspection;
+
+        Self {
+            file: file.into(),
+            hashes: hashes.into(),
+            format: format.into(),
+            identifiers: identifiers.into(),
+            platform: platform.into(),
+        }
+    }
+}
+
+impl From<FileInfo> for FfiFileInfo {
+    fn from(file: FileInfo) -> Self {
+        let FileInfo { size } = file;
+
+        Self { size }
+    }
+}
+
+impl From<Hashes> for FfiHashes {
+    fn from(hashes: Hashes) -> Self {
+        let Hashes {
+            crc32,
+            md5,
+            sha1,
+            sha256,
+        } = hashes;
+
+        Self {
+            crc32: crc32.into(),
+            md5: md5.into(),
+            sha1: sha1.into(),
+            sha256: sha256.into(),
+        }
+    }
+}
+
+impl From<FormatInfo> for FfiFormatInfo {
+    fn from(format: FormatInfo) -> Self {
         let FormatInfo {
             container,
             header,
             media_type,
         } = format;
+
+        Self {
+            container: to_ffi_string(container),
+            header: to_ffi_string(header),
+            media_type: media_type.into(),
+        }
+    }
+}
+
+impl From<Identifiers> for FfiIdentifiers {
+    fn from(identifiers: Identifiers) -> Self {
         let Identifiers {
             title,
             serial,
@@ -206,14 +286,6 @@ impl From<RomInspection> for FfiRomInspection {
         } = identifiers;
 
         Self {
-            file_size: file.size,
-            crc32: hashes.crc32.into(),
-            md5: hashes.md5.into(),
-            sha1: hashes.sha1.into(),
-            sha256: hashes.sha256.into(),
-            container: to_ffi_string(container),
-            header: to_ffi_string(header),
-            media_type: media_type.into(),
             title: to_ffi_string(title),
             serial: to_ffi_string(serial),
             product_code: to_ffi_string(product_code),
@@ -221,7 +293,6 @@ impl From<RomInspection> for FfiRomInspection {
             disc_id: to_ffi_string(disc_id),
             region: to_ffi_string(region),
             revision: to_ffi_string(revision),
-            platform: platform.into(),
         }
     }
 }
@@ -273,11 +344,11 @@ mod tests {
 
         assert_eq!(result.error_code, RomInspectionErrorCode::Ok);
         let inspection = result.inspection.as_ref().expect("inspection");
-        assert_eq!(inspection.file_size, 16);
+        assert_eq!(inspection.file.size, 16);
         assert_eq!(&*inspection.platform, "NES");
-        assert_eq!(inspection.media_type, FfiMediaType::Cartridge);
+        assert_eq!(inspection.format.media_type, FfiMediaType::Cartridge);
         assert!(matches!(
-            inspection.header,
+            inspection.format.header,
             repr_c::TaggedOption::Some(ref header) if &**header == "iNES"
         ));
         assert_eq!(file.stream_position()?, 7);

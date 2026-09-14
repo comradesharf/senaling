@@ -80,21 +80,21 @@ public struct RomInspection: Equatable, Sendable {
   }
 
   private init(_ inspection: FfiRomInspection_t) {
-    fileSize = inspection.file_size
-    crc32 = Self.decode(inspection.crc32)
-    md5 = Self.decode(inspection.md5)
-    sha1 = Self.decode(inspection.sha1)
-    sha256 = Self.decode(inspection.sha256)
-    container = Self.decode(inspection.container)
-    header = Self.decode(inspection.header)
-    mediaType = Self.decode(inspection.media_type)
-    title = Self.decode(inspection.title)
-    serial = Self.decode(inspection.serial)
-    productCode = Self.decode(inspection.product_code)
-    volumeLabel = Self.decode(inspection.volume_label)
-    discID = Self.decode(inspection.disc_id)
-    region = Self.decode(inspection.region)
-    revision = Self.decode(inspection.revision)
+    fileSize = inspection.file.size
+    crc32 = Self.decode(inspection.hashes.crc32)
+    md5 = Self.decode(inspection.hashes.md5)
+    sha1 = Self.decode(inspection.hashes.sha1)
+    sha256 = Self.decode(inspection.hashes.sha256)
+    container = Self.decode(inspection.format.container)
+    header = Self.decode(inspection.format.header)
+    mediaType = Self.decode(inspection.format.media_type)
+    title = Self.decode(inspection.identifiers.title)
+    serial = Self.decode(inspection.identifiers.serial)
+    productCode = Self.decode(inspection.identifiers.product_code)
+    volumeLabel = Self.decode(inspection.identifiers.volume_label)
+    discID = Self.decode(inspection.identifiers.disc_id)
+    region = Self.decode(inspection.identifiers.region)
+    revision = Self.decode(inspection.identifiers.revision)
     platform = Self.decode(inspection.platform)
   }
 

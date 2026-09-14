@@ -10,7 +10,7 @@ import Testing
 
 struct RomScanTests {
 
-  @MainActor @Test func scanFindsRegularFilesRecursivelyAndSkipsHiddenFiles() async throws {
+  @MainActor @Test func scanReturnsOnlySuccessfullyInspectedRomFiles() async throws {
     let fileManager = FileManager.default
 
     let folderURL = fileManager.temporaryDirectory
@@ -26,21 +26,17 @@ struct RomScanTests {
       try? fileManager.removeItem(at: folderURL)
     }
 
-    try "NES\\x1a".data(using: .utf8)?.write(to: topLevelFileURL)
-    try "NES\\x1a".data(using: .utf8)?.write(to: nestedFileURL)
-    try "NES\\x1a".data(using: .utf8)?.write(to: hiddenFileURL)
+    let validRom = validINesRom
+    try Data("not a ROM".utf8).write(to: topLevelFileURL)
+    try validRom.write(to: nestedFileURL)
+    try validRom.write(to: hiddenFileURL)
 
-    for try await data in RomFolderScanner(folderURL: folderURL) {
-      print("Result \(String(decoding: data, as: UTF8.self))")
+//    var results: [] = []
+    for try await romInspection in RomFolderScanner(folderURL: folderURL) {
+      print("found \(romInspection)")
     }
 
-    //    #expect(count == 2)
-    //    let recordedURLs = await foundURLs.values
-    //    let normalizedURLs = Set(recordedURLs.map { $0.resolvingSymlinksInPath() })
-    //    let expectedURLs = Set(
-    //      [topLevelFileURL, nestedFileURL].map { $0.resolvingSymlinksInPath() }
-    //    )
-    //    #expect(normalizedURLs == expectedURLs)
+//    #expect(results == [validRom])
   }
 
   //  @Test func scanOfEmptyFolderReturnsZeroWithoutCallingHandler() async throws {
@@ -74,3 +70,9 @@ struct RomScanTests {
   //    }
   //  }
 }
+
+private let validINesRom: Data = {
+  var rom = Data(repeating: 0, count: 16)
+  rom.replaceSubrange(0..<4, with: Data("NES\u{001A}".utf8))
+  return rom
+}()

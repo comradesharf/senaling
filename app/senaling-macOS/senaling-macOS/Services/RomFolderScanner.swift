@@ -5,6 +5,7 @@
 //  Created by Hishammuddin Sani on 12/09/2026.
 //
 import Foundation
+import SenalingCore
 
 struct RomFolderScannerJob: Sendable {
   enum State: Sendable {
@@ -24,7 +25,7 @@ struct RomFolderScannerJob: Sendable {
 }
 
 struct RomFolderScanner: AsyncSequence {
-  typealias Element = Data
+  typealias Element = RomInspection
 
   let folderURL: URL
 
@@ -33,7 +34,7 @@ struct RomFolderScanner: AsyncSequence {
   }
 
   struct AsyncIterator: AsyncIteratorProtocol {
-    typealias Element = Data
+    typealias Element = RomInspection
 
     private let keys: Set<URLResourceKey> = [
       .isRegularFileKey,
@@ -51,7 +52,7 @@ struct RomFolderScanner: AsyncSequence {
       )
     }
 
-    mutating func next() async throws -> Data? {
+    mutating func next() async throws -> RomInspection? {
       try Task.checkCancellation()
 
       while true {
@@ -72,11 +73,16 @@ struct RomFolderScanner: AsyncSequence {
           continue
         }
 
-        return try Data(contentsOf: fileURL)
+        let fileHandle = try FileHandle(forReadingFrom: fileURL)
+        defer { try? fileHandle.close() }
+
+        do {
+          return try RomInspection.inspect(fileHandle: fileHandle)
+        } catch {
+          continue
+        }
       }
-
     }
-
   }
 
   //  private func getFileURLs(_ folderURL: URL) throws -> [URL] {
