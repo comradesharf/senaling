@@ -8,25 +8,41 @@
 import Foundation
 import senaling_ffi
 
-public struct RomInspection: Equatable, Sendable {
-  public let fileSize: UInt64
-  public let crc32: String
-  public let md5: String
-  public let sha1: String
-  public let sha256: String
-  public let container: String?
-  public let header: String?
-  public let mediaType: MediaType
-  public let title: String?
-  public let serial: String?
-  public let productCode: String?
-  public let volumeLabel: String?
-  public let discID: String?
-  public let region: String?
-  public let revision: String?
+public struct RomInspection: Equatable, Sendable, Codable {
+  public let file: FileInfo
+  public let hashes: Hashes
+  public let format: FormatInfo
+  public let identifiers: Identifiers
   public let platform: String
 
-  public enum MediaType: Equatable, Sendable {
+  public struct FileInfo: Equatable, Sendable, Codable {
+    public let size: UInt64
+  }
+
+  public struct Hashes: Equatable, Sendable, Codable {
+    public let crc32: String
+    public let md5: String
+    public let sha1: String
+    public let sha256: String
+  }
+
+  public struct FormatInfo: Equatable, Sendable, Codable {
+    public let container: String?
+    public let header: String?
+    public let mediaType: MediaType
+  }
+
+  public struct Identifiers: Equatable, Sendable, Codable {
+    public let title: String?
+    public let serial: String?
+    public let productCode: String?
+    public let volumeLabel: String?
+    public let discID: String?
+    public let region: String?
+    public let revision: String?
+  }
+
+  public enum MediaType: Equatable, Sendable, Codable {
     case cartridge
     case cdRom
     case dvdRom
@@ -80,21 +96,27 @@ public struct RomInspection: Equatable, Sendable {
   }
 
   private init(_ inspection: FfiRomInspection_t) {
-    fileSize = inspection.file.size
-    crc32 = Self.decode(inspection.hashes.crc32)
-    md5 = Self.decode(inspection.hashes.md5)
-    sha1 = Self.decode(inspection.hashes.sha1)
-    sha256 = Self.decode(inspection.hashes.sha256)
-    container = Self.decode(inspection.format.container)
-    header = Self.decode(inspection.format.header)
-    mediaType = Self.decode(inspection.format.media_type)
-    title = Self.decode(inspection.identifiers.title)
-    serial = Self.decode(inspection.identifiers.serial)
-    productCode = Self.decode(inspection.identifiers.product_code)
-    volumeLabel = Self.decode(inspection.identifiers.volume_label)
-    discID = Self.decode(inspection.identifiers.disc_id)
-    region = Self.decode(inspection.identifiers.region)
-    revision = Self.decode(inspection.identifiers.revision)
+    file = FileInfo(size: inspection.file.size)
+    hashes = Hashes(
+      crc32: Self.decode(inspection.hashes.crc32),
+      md5: Self.decode(inspection.hashes.md5),
+      sha1: Self.decode(inspection.hashes.sha1),
+      sha256: Self.decode(inspection.hashes.sha256)
+    )
+    format = FormatInfo(
+      container: Self.decode(inspection.format.container),
+      header: Self.decode(inspection.format.header),
+      mediaType: Self.decode(inspection.format.media_type)
+    )
+    identifiers = Identifiers(
+      title: Self.decode(inspection.identifiers.title),
+      serial: Self.decode(inspection.identifiers.serial),
+      productCode: Self.decode(inspection.identifiers.product_code),
+      volumeLabel: Self.decode(inspection.identifiers.volume_label),
+      discID: Self.decode(inspection.identifiers.disc_id),
+      region: Self.decode(inspection.identifiers.region),
+      revision: Self.decode(inspection.identifiers.revision)
+    )
     platform = Self.decode(inspection.platform)
   }
 

@@ -5,217 +5,194 @@
 //  Created by Hishammuddin Sani on 12/09/2026.
 //
 import Foundation
+import OSLog
 import SenalingCore
+import SwiftData
+import SwiftUI
 
-struct RomFolderScannerJob: Sendable {
-  enum State: Sendable {
-    case queued
-    case scanning(fileCount: Int)
-    case completed(fileCount: Int)
-    case failed(message: String)
-    case cancelled
-  }
+protocol IRomFolderScanner {
 
-  let folderURL: URL
-  var state: State = State.queued
+  var isScanning: Bool { get }
 
-  init(_ folderURL: URL) {
-    self.folderURL = folderURL
-  }
+  func run(folderURL: URL, handler: @escaping (Data, RomInspection) -> Void)
+
+  func cancel()
 }
 
-struct RomFolderScanner: AsyncSequence {
-  typealias Element = RomInspection
+@Observable
+final class RomFolderScanner: IRomFolderScanner {
 
-  let folderURL: URL
+  private static let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "comradesharf",
+    category: String(describing: RomFolderScanner.self)
+  )
 
-  func makeAsyncIterator() -> AsyncIterator {
-    AsyncIterator(folderURL)
+  private let runner = Runner()
+
+  private(set) var isScanning = false
+
+  func run(folderURL: URL, handler: @escaping (Data, RomInspection) -> Void) {
+    Task {
+      let didStart = folderURL.startAccessingSecurityScopedResource()
+      defer {
+        if didStart {
+          folderURL.stopAccessingSecurityScopedResource()
+        }
+      }
+
+      Self.logger.debug("Checking folder \(folderURL)")
+
+      isScanning = true
+      await runner.run(folderURL, handler: handler)
+      isScanning = false
+    }
   }
 
-  struct AsyncIterator: AsyncIteratorProtocol {
-    typealias Element = RomInspection
+  func cancel() {
+    Task {
+      await runner.cancel()
+      isScanning = false
+    }
+  }
 
-    private let keys: Set<URLResourceKey> = [
-      .isRegularFileKey,
-      .isDirectoryKey,
-      .isHiddenKey,
-    ]
+  struct RomFileAsyncIterator: AsyncSequence {
 
-    private var enumerator: FileManager.DirectoryEnumerator?
+    typealias Element = (Data, RomInspection)
 
-    init(_ folderURL: URL) {
-      self.enumerator = FileManager.default.enumerator(
-        at: folderURL,
-        includingPropertiesForKeys: Array(keys),
-        options: [.skipsHiddenFiles, .skipsPackageDescendants]
-      )
+    let folderURL: URL
+
+    func makeAsyncIterator() -> AsyncIterator {
+      AsyncIterator(folderURL)
     }
 
-    mutating func next() async throws -> RomInspection? {
-      try Task.checkCancellation()
+    struct AsyncIterator: AsyncIteratorProtocol {
+      typealias Element = (Data, RomInspection)
 
-      while true {
-        guard let fileURL = enumerator?.nextObject() as? URL else {
-          return nil
-        }
+      private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "comradesharf",
+        category: String(describing: AsyncIterator.self)
+      )
 
-        let didStart = fileURL.startAccessingSecurityScopedResource()
-        defer {
-          if didStart {
-            fileURL.stopAccessingSecurityScopedResource()
+      private let keys: Set<URLResourceKey> = [
+        .isRegularFileKey,
+        .isDirectoryKey,
+        .isHiddenKey,
+      ]
+
+      private var enumerator: FileManager.DirectoryEnumerator?
+
+      init(_ folderURL: URL) {
+        self.enumerator = FileManager.default.enumerator(
+          at: folderURL,
+          includingPropertiesForKeys: Array(keys),
+          options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        )
+      }
+
+      mutating func next() async throws -> (Data, RomInspection)? {
+        while true {
+          try Task.checkCancellation()
+
+          guard let fileURL = enumerator?.nextObject() as? URL else {
+            Self.logger.debug("No more file. Returning nil")
+            return nil
           }
-        }
 
-        let values = try fileURL.resourceValues(forKeys: keys)
+          let isStarted = fileURL.startAccessingSecurityScopedResource()
+          defer {
+            if isStarted {
+              fileURL.stopAccessingSecurityScopedResource()
+            }
+          }
 
-        guard values.isRegularFile == true else {
-          continue
-        }
+          let values = try fileURL.resourceValues(forKeys: keys)
 
-        let fileHandle = try FileHandle(forReadingFrom: fileURL)
-        defer { try? fileHandle.close() }
+          guard values.isRegularFile == true else {
+            continue
+          }
 
-        do {
-          return try RomInspection.inspect(fileHandle: fileHandle)
-        } catch {
-          continue
+          let fileHandle = try FileHandle(forReadingFrom: fileURL)
+          defer { try? fileHandle.close() }
+
+          do {
+            Self.logger.info("Checking for file: \(fileURL)")
+            let romInspection = try RomInspection.inspect(fileHandle: fileHandle)
+
+            let bookmark = try fileURL.bookmarkData(
+              options: [.withSecurityScope],
+              includingResourceValuesForKeys: nil,
+              relativeTo: nil
+            )
+
+            return (bookmark, romInspection)
+          } catch {
+            Self.logger.warning("Unable to inspect file. Reason: \(error)")
+            continue
+          }
         }
       }
     }
   }
 
-  //  private func getFileURLs(_ folderURL: URL) throws -> [URL] {
-  //    guard
-  //      let enumerator = FileManager.default.enumerator(
-  //        at: folderURL,
-  //        includingPropertiesForKeys: Array(keys),
-  //        options: [.skipsHiddenFiles, .skipsPackageDescendants]
-  //      )
-  //    else {
-  //      throw CocoaError(.fileReadUnknown)
-  //    }
-  //
-  //    var fileURLs: [URL] = []
-  //    while let fileURL = enumerator.nextObject() as? URL {
-  //      fileURLs.append(fileURL)
-  //    }
-  //
-  //    return fileURLs
-  //  }
-  //
-  //  func scan(folderURL: URL, onFileFound: @Sendable (URL, Int) async -> Void) async throws -> Int {
-  //    let fileURLs = try getFileURLs(folderURL)
-  //    var count = 0
-  //
-  //    for case let fileURL in fileURLs {
-  //      try Task.checkCancellation()
-  //
-  //      let values = try fileURL.resourceValues(forKeys: keys)
-  //
-  //      guard values.isRegularFile == true else {
-  //        continue
-  //      }
-  //
-  //      count += 1
-  //
-  //      await onFileFound(fileURL, count)
-  //    }
-  //
-  //    return count
-  //  }
+  private actor Runner: Sendable {
+
+    private static let logger = Logger(
+      subsystem: Bundle.main.bundleIdentifier ?? "comradesharf",
+      category: String(describing: RomFolderScanner.self)
+    )
+
+    private var workerTask: Task<Void, Never>?
+
+    func run(
+      _ folderURL: URL,
+      handler: @escaping (Data, RomInspection) -> Void
+    ) {
+      guard workerTask == nil else {
+        Self.logger.debug("Existing task is still running")
+        return
+      }
+
+      workerTask = Task {
+        do {
+          Self.logger.debug("Start running task")
+          for try await (bookmark, romInspection) in RomFileAsyncIterator(folderURL: folderURL) {
+            handler(bookmark, romInspection)
+          }
+        } catch {
+          cancel()
+        }
+      }
+    }
+
+    func cancel() {
+      Self.logger.debug("Cancelling running task")
+      workerTask?.cancel()
+      workerTask = nil
+      Self.logger.debug("Running task cancelled")
+    }
+
+  }
+
 }
 
-//protocol IRomFolderScannerRunner: Actor {
-//
-//  typealias StatusHandler = (RomFolderScannerJob.State) async -> Void
-//
-//  func run(_ job: RomFolderScannerJob, statusHandler: @escaping StatusHandler) async
-//
-//  func cancel()
-//}
-//
-//actor RomFolderScannerRunner: IRomFolderScannerRunner, Sendable {
-//
-//  private var workerTask: Task<Void, Never>?
-//
-//  private var scanner: IRomFolderScanner
-//
-//  init(scanner: IRomFolderScanner) {
-//    self.scanner = scanner
-//  }
-//
-//  func run(
-//    _ job: RomFolderScannerJob,
-//    statusHandler: @escaping StatusHandler
-//  ) async {
-//    guard workerTask == nil else {
-//      return
-//    }
-//
-//    workerTask = Task {
-//      await statusHandler(.scanning(fileCount: 0))
-//      guard job.folderURL.startAccessingSecurityScopedResource() else {
-//        await statusHandler(.failed(message: "No permission to access folder"))
-//        return
-//      }
-//      defer {
-//        job.folderURL.stopAccessingSecurityScopedResource()
-//      }
-//
-//      do {
-//        let count = try await scanner.scan(folderURL: job.folderURL) { fileURL, count in
-//          await statusHandler(.scanning(fileCount: count))
-//          print("Found", fileURL.path(percentEncoded: false))
-//        }
-//        await statusHandler(.completed(fileCount: count))
-//      } catch is CancellationError {
-//        await statusHandler(.cancelled)
-//      } catch {
-//        await statusHandler(.failed(message: error.localizedDescription))
-//      }
-//    }
-//  }
-//
-//  func cancel() {
-//    workerTask?.cancel()
-//    workerTask = nil
-//  }
-//}
-//
-//protocol IRomFolderScannerStore {
-//
-//  func start(_ folderURL: URL)
-//
-//  func cancel()
-//}
-//
-//@Observable
-//final class RomFolderScannerStore: IRomFolderScannerStore {
-//
-//  private let runner: IRomFolderScannerRunner
-//
-//  init(runner: IRomFolderScannerRunner) {
-//    self.runner = runner
-//  }
-//
-//  func start(_ folderURL: URL) {
-//    Task {
-//      await runner.run(RomFolderScannerJob(folderURL)) { _ in }
-//    }
-//  }
-//
-//  func cancel() {
-//    Task {
-//      await runner.cancel()
-//    }
-//  }
-//}
-//
-//@Observable
-//final class MockedRomFolderScannerStore: IRomFolderScannerStore {
-//
-//  func start(_ folderURL: URL) {}
-//
-//  func cancel() {}
-//}
+@Observable
+final class MockRomFolderScanner: IRomFolderScanner {
+
+  private(set) var isScanning: Bool
+
+  init(isScanning: Bool) {
+    self.isScanning = isScanning
+  }
+
+  func run(folderURL: URL, handler: @escaping (Data, SenalingCore.RomInspection) -> Void) {
+    isScanning = true
+  }
+
+  func cancel() {
+    isScanning = false
+  }
+}
+
+extension EnvironmentValues {
+  @Entry var romFolderScanner: IRomFolderScanner = RomFolderScanner()
+}

@@ -55,6 +55,19 @@ fn build_ffi() -> Result<()> {
 fn build_mac_app() -> Result<()> {
     let status = std::process::Command::new("xcodebuild")
         .args(&[
+            "-list",
+            "-project",
+            "./app/senaling-macOS/senaling-macOS.xcodeproj",
+        ])
+        .status()
+        .with_context(|| "Failed to execute xcodebuild")?;
+
+    if !status.success() {
+        return Err(anyhow!("xcodebuild failed with status: {}", status));
+    }
+
+    let status = std::process::Command::new("xcodebuild")
+        .args(&[
             "-project",
             "./app/senaling-macOS/senaling-macOS.xcodeproj",
             "-scheme",

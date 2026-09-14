@@ -14,8 +14,9 @@ struct senaling_macOSApp: App {
 
   var sharedModelContainer: ModelContainer = {
     let schema = Schema([
-      Item.self
+      RomFile.self
     ])
+
     let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
     do {
@@ -32,9 +33,3 @@ struct senaling_macOSApp: App {
     .modelContainer(sharedModelContainer)
   }
 }
-
-//extension EnvironmentValues {
-//  @Entry var romFolderScannerStore: any IRomFolderScannerStore = RomFolderScannerStore(
-//    queue: RomFolderScannerRunner(scanner: RomFolderScanner())
-//  )
-//}

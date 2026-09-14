@@ -9,6 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
 
+  @State private var isPresented = false
+
   var body: some View {
     NavigationSplitView {
       List {
@@ -18,14 +20,23 @@ struct ContentView: View {
       }
     } detail: {
       Text("This is games")
-    }.toolbar {
+    }
+    .toolbar {
       ToolbarItem(placement: .primaryAction) {
-        ScanRomFolderButton("Add Folder", systemImage: "folder.badge.plus")
+        Button(action: onButtonClick) {
+          Label("Test", systemImage: "folder.badge.plus")
+        }
+        .romFolderPicker(isPresented: $isPresented)
       }
     }
+  }
+
+  func onButtonClick() {
+    isPresented.toggle()
   }
 }
 
 #Preview {
   ContentView()
+    .environment(\.romFolderScanner, MockRomFolderScanner(isScanning: false))
 }
