@@ -6,4 +6,7 @@ version.workspace = true
 [dependencies]
 csv = "1.4.0"
 anyhow.workspace = true
-
+crc32fast = "1.5.0"
+md-5 = "0.10.6"
+sha1 = "0.10.6"
+sha2 = "0.10.9"

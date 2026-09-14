@@ -33,8 +33,8 @@ struct senaling_macOSApp: App {
   }
 }
 
-extension EnvironmentValues {
-  @Entry var romFolderScannerStore: any IRomFolderScannerStore = RomFolderScannerStore(
-    queue: RomFolderScannerRunner(scanner: RomFolderScanner())
-  )
-}
+//extension EnvironmentValues {
+//  @Entry var romFolderScannerStore: any IRomFolderScannerStore = RomFolderScannerStore(
+//    queue: RomFolderScannerRunner(scanner: RomFolderScanner())
+//  )
+//}

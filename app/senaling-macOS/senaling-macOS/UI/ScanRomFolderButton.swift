@@ -9,7 +9,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ScanRomFolderButton: View {
-  @Environment(\.romFolderScannerStore) private var romFolderScannerStore
+  //  @Environment(\.romFolderScannerStore) private var romFolderScannerStore
 
   private var titleKey: LocalizedStringResource
   private var systemImage: String
@@ -39,16 +39,16 @@ struct ScanRomFolderButton: View {
   }
 
   func onFolderSelected(result: Result<URL, any Error>) {
-    switch result {
-    case .success(let folderURL):
-      romFolderScannerStore.start(folderURL)
-    case .failure(let err):
-      print("Failed", err)
-    }
+    //    switch result {
+    //    case .success(let folderURL):
+    ////      romFolderScannerStore.start(folderURL)
+    //    case .failure(let err):
+    //      print("Failed", err)
+    //    }
   }
 }
 
 #Preview {
   ScanRomFolderButton("Test", systemImage: "folder.badge.plus")
-    .environment(\.romFolderScannerStore, MockedRomFolderScannerStore())
+  //    .environment(\.romFolderScannerStore, MockedRomFolderScannerStore())
 }
