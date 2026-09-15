@@ -12,7 +12,7 @@ use crate::shared::rom_inspection::{
 
 const NES_PLATFORM: &str = "NES";
 const READ_BUFFER_SIZE: usize = 64 * 1024;
-const HEADER_INSPECTION_SIZE: usize = 16;
+const SIGNATURE_INSPECTION_SIZE: usize = 512;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct NesRomInspector;
@@ -25,8 +25,9 @@ impl NesRomInspector {
 
 impl RomInspector for NesRomInspector {
     fn inspect(&self, reader: &mut dyn Read) -> Result<RomInspection> {
-        let (leading_bytes, size, hashes) = read_and_hash(reader)?;
+        let leading_bytes = read_signature(reader)?;
         let format = inspect_format(&leading_bytes)?;
+        let (size, hashes) = hash_file(reader, &leading_bytes)?;
 
         Ok(RomInspection {
             file: FileInfo { size },
@@ -81,14 +82,36 @@ fn inspect_format(bytes: &[u8]) -> Result<FormatInfo> {
     })
 }
 
-fn read_and_hash(reader: &mut dyn Read) -> Result<(Vec<u8>, u64, Hashes)> {
+fn read_signature(reader: &mut dyn Read) -> Result<Vec<u8>> {
+    let mut signature = Vec::with_capacity(SIGNATURE_INSPECTION_SIZE);
+    let mut buffer = [0_u8; SIGNATURE_INSPECTION_SIZE];
+
+    while signature.len() < SIGNATURE_INSPECTION_SIZE {
+        let bytes_read = reader
+            .read(&mut buffer[signature.len()..])
+            .context("failed while reading NES ROM signature")?;
+        if bytes_read == 0 {
+            break;
+        }
+
+        signature.extend_from_slice(&buffer[signature.len()..signature.len() + bytes_read]);
+    }
+
+    Ok(signature)
+}
+
+fn hash_file(reader: &mut dyn Read, leading_bytes: &[u8]) -> Result<(u64, Hashes)> {
     let mut buffer = [0_u8; READ_BUFFER_SIZE];
-    let mut leading_bytes = Vec::with_capacity(HEADER_INSPECTION_SIZE);
-    let mut size = 0_u64;
+    let mut size = leading_bytes.len() as u64;
     let mut crc32 = Crc32Hasher::new();
     let mut md5 = Md5::new();
     let mut sha1 = Sha1::new();
     let mut sha256 = Sha256::new();
+
+    crc32.update(leading_bytes);
+    md5.update(leading_bytes);
+    sha1.update(leading_bytes);
+    sha256.update(leading_bytes);
 
     loop {
         let bytes_read = reader
@@ -99,11 +122,6 @@ fn read_and_hash(reader: &mut dyn Read) -> Result<(Vec<u8>, u64, Hashes)> {
         }
 
         let chunk = &buffer[..bytes_read];
-        if leading_bytes.len() < HEADER_INSPECTION_SIZE {
-            let bytes_needed = HEADER_INSPECTION_SIZE - leading_bytes.len();
-            leading_bytes.extend_from_slice(&chunk[..chunk.len().min(bytes_needed)]);
-        }
-
         size += bytes_read as u64;
         crc32.update(chunk);
         md5.update(chunk);
@@ -112,7 +130,6 @@ fn read_and_hash(reader: &mut dyn Read) -> Result<(Vec<u8>, u64, Hashes)> {
     }
 
     Ok((
-        leading_bytes,
         size,
         Hashes {
             crc32: format!("{:08x}", crc32.finalize()),
@@ -125,6 +142,8 @@ fn read_and_hash(reader: &mut dyn Read) -> Result<(Vec<u8>, u64, Hashes)> {
 
 #[cfg(test)]
 mod tests {
+    use std::io;
+
     use super::*;
 
     #[test]
@@ -170,8 +189,38 @@ mod tests {
     }
 
     #[test]
+    fn rejects_unsupported_file_before_reading_past_signature() {
+        struct Reader {
+            bytes: [u8; SIGNATURE_INSPECTION_SIZE],
+            offset: usize,
+        }
+
+        impl Read for Reader {
+            fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+                if self.offset == self.bytes.len() {
+                    return Err(io::Error::other("hashing should not start"));
+                }
+
+                let bytes_to_copy = buffer.len().min(self.bytes.len() - self.offset);
+                buffer[..bytes_to_copy]
+                    .copy_from_slice(&self.bytes[self.offset..self.offset + bytes_to_copy]);
+                self.offset += bytes_to_copy;
+                Ok(bytes_to_copy)
+            }
+        }
+
+        let mut reader = Reader {
+            bytes: [0; SIGNATURE_INSPECTION_SIZE],
+            offset: 0,
+        };
+
+        let error = NesRomInspector::new().inspect(&mut reader).unwrap_err();
+        assert!(error.to_string().contains("unsupported NES ROM format"));
+    }
+
+    #[test]
     fn calculates_all_hashes_without_buffering_the_entire_file() -> Result<()> {
-        let (_, size, hashes) = read_and_hash(&mut &b"abc"[..])?;
+        let (size, hashes) = hash_file(&mut &b""[..], b"abc")?;
 
         assert_eq!(size, 3);
         assert_eq!(hashes.crc32, "352441c2");

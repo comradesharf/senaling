@@ -33,15 +33,6 @@ final class RomFolderScanner: IRomFolderScanner {
 
   func run(folderURL: URL, handler: @escaping (Data, RomInspection) -> Void) {
     Task {
-      let didStart = folderURL.startAccessingSecurityScopedResource()
-      defer {
-        if didStart {
-          folderURL.stopAccessingSecurityScopedResource()
-        }
-      }
-
-      Self.logger.debug("Checking folder \(folderURL)")
-
       isScanning = true
       await runner.run(folderURL, handler: handler)
       isScanning = false
@@ -98,33 +89,42 @@ final class RomFolderScanner: IRomFolderScanner {
             return nil
           }
 
-          let isStarted = fileURL.startAccessingSecurityScopedResource()
-          defer {
-            if isStarted {
-              fileURL.stopAccessingSecurityScopedResource()
-            }
-          }
-
           let values = try fileURL.resourceValues(forKeys: keys)
 
           guard values.isRegularFile == true else {
             continue
           }
 
-          let fileHandle = try FileHandle(forReadingFrom: fileURL)
-          defer { try? fileHandle.close() }
-
           do {
             Self.logger.info("Checking for file: \(fileURL)")
-            let romInspection = try RomInspection.inspect(fileHandle: fileHandle)
+
+            let romInspection = try {
+              let fileHandle = try FileHandle(forReadingFrom: fileURL)
+              defer {
+                Self.logger.info("Closing file handle: \(fileURL)")
+                try? fileHandle.close()
+              }
+
+              return try RomInspection.inspect(fileHandle: fileHandle)
+            }()
+
+            Self.logger.debug("Creating bookmark: \(fileURL)")
 
             let bookmark = try fileURL.bookmarkData(
-              options: [.withSecurityScope],
+              options: [.withSecurityScope, .securityScopeAllowOnlyReadAccess],
               includingResourceValuesForKeys: nil,
               relativeTo: nil
             )
 
             return (bookmark, romInspection)
+          } catch SenalingCore.RomInspectionError.internalFailure(let diagnostic) {
+            Self.logger.warning("Internal failure. Reason: \(diagnostic ?? "N/A")")
+            continue
+          } catch SenalingCore.RomInspectionError.io(let diagnostic) {
+            Self.logger.warning("IO failure. Reason: \(diagnostic ?? "N/A")")
+            continue
+          } catch SenalingCore.RomInspectionError.invalidRom {
+            continue
           } catch {
             Self.logger.warning("Unable to inspect file. Reason: \(error)")
             continue
@@ -154,7 +154,15 @@ final class RomFolderScanner: IRomFolderScanner {
 
       workerTask = Task {
         do {
-          Self.logger.debug("Start running task")
+          let didStart = folderURL.startAccessingSecurityScopedResource()
+          defer {
+            if didStart {
+              folderURL.stopAccessingSecurityScopedResource()
+            }
+          }
+
+          Self.logger.debug("Running task: \(folderURL)")
+
           for try await (bookmark, romInspection) in RomFileAsyncIterator(folderURL: folderURL) {
             handler(bookmark, romInspection)
           }

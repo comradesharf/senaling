@@ -5,12 +5,15 @@
 //  Created by Hishammuddin Sani on 12/09/2026.
 //
 
+import SenalingCore
+import SwiftData
 import SwiftUI
 import UniformTypeIdentifiers
 
 struct ScanRomFolderView: ViewModifier {
 
   @Environment(\.romFolderScanner) private var romFolderScanner
+  @Environment(\.modelContext) private var modelContext
 
   @Binding var isPresented: Bool
 
@@ -27,7 +30,13 @@ struct ScanRomFolderView: ViewModifier {
     switch result {
     case .success(let folderURL):
       romFolderScanner.run(folderURL: folderURL) { bookmark, romInspection in
-        print("Found \(romInspection)")
+        modelContext.insert(
+          RomFile(
+            ID: romInspection.hashes.crc32,
+            bookmark: bookmark,
+            romInspection: romInspection
+          )
+        )
       }
     case .failure:
       print("")

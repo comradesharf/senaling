@@ -10,10 +10,12 @@ import SwiftData
 
 @Model
 final class RomFile {
+  var ID: String
   var bookmark: Data
   var romInspection: RomInspection
 
-  init(bookmark: Data, romInspection: RomInspection) {
+  init(ID: String, bookmark: Data, romInspection: RomInspection) {
+    self.ID = ID
     self.bookmark = bookmark
     self.romInspection = romInspection
   }
