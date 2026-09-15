@@ -47,7 +47,7 @@ final class RomFolderScanner: IRomFolderScanner {
     }
   }
 
-  nonisolated private struct RomFileAsyncIterator: AsyncSequence {
+  nonisolated struct RomFileAsyncIterator: AsyncSequence {
 
     typealias Element = (Data, RomInspection)
 
