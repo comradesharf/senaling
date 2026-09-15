@@ -13,7 +13,6 @@ import UniformTypeIdentifiers
 struct ScanRomFolderView: ViewModifier {
 
   @Environment(\.romFolderScanner) private var romFolderScanner
-  @Environment(\.modelContext) private var modelContext
 
   @Binding var isPresented: Bool
 
@@ -29,15 +28,7 @@ struct ScanRomFolderView: ViewModifier {
   private func onFolderSelected(result: Result<URL, any Error>) {
     switch result {
     case .success(let folderURL):
-      romFolderScanner.run(folderURL: folderURL) { bookmark, romInspection in
-        modelContext.insert(
-          RomFile(
-            ID: romInspection.hashes.crc32,
-            bookmark: bookmark,
-            romInspection: romInspection
-          )
-        )
-      }
+      romFolderScanner.run(folderURL: folderURL)
     case .failure:
       print("")
     }

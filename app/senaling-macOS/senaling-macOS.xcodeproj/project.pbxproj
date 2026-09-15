@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0D1776F03051E23F002AF24A /* SenalingCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0D1776EF3051E23F002AF24A /* SenalingCore */; };
+		A10000013052000000000001 /* SenalingMacros in Frameworks */ = {isa = PBXBuildFile; productRef = A10000033052000000000003 /* SenalingMacros */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0D1776F03051E23F002AF24A /* SenalingCore in Frameworks */,
+				A10000013052000000000001 /* SenalingMacros in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -126,6 +128,7 @@
 			name = "senaling-macOS";
 			packageProductDependencies = (
 				0D1776EF3051E23F002AF24A /* SenalingCore */,
+				A10000033052000000000003 /* SenalingMacros */,
 			);
 			productName = "senaling-macOS";
 			productReference = 0DCC40C53050521700240B06 /* senaling-macOS.app */;
@@ -211,6 +214,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0D1776EE3051E005002AF24A /* XCLocalSwiftPackageReference "../../packages/SenalingCore" */,
+				A10000023052000000000002 /* XCLocalSwiftPackageReference "../../packages/SenalingMacros" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0DCC40C63050521700240B06 /* Products */;
@@ -605,6 +609,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../packages/SenalingCore;
 		};
+		A10000023052000000000002 /* XCLocalSwiftPackageReference "../../packages/SenalingMacros" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../packages/SenalingMacros;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -612,6 +620,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0D1776EE3051E005002AF24A /* XCLocalSwiftPackageReference "../../packages/SenalingCore" */;
 			productName = SenalingCore;
+		};
+		A10000033052000000000003 /* SenalingMacros */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A10000023052000000000002 /* XCLocalSwiftPackageReference "../../packages/SenalingMacros" */;
+			productName = SenalingMacros;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

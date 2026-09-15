@@ -9,13 +9,17 @@ import SenalingCore
 import SwiftData
 
 @Model
-final class RomFile {
-  var ID: String
+final class RomFile: CustomStringConvertible {
+  var description: String {
+    "RomFile (UID: \(UID), romInspection: \(romInspection), bookmark: \(bookmark)"
+  }
+
+  @Attribute(.unique) var UID: String
   var bookmark: Data
   var romInspection: RomInspection
 
-  init(ID: String, bookmark: Data, romInspection: RomInspection) {
-    self.ID = ID
+  init(bookmark: Data, romInspection: RomInspection) {
+    self.UID = romInspection.hashes.crc32
     self.bookmark = bookmark
     self.romInspection = romInspection
   }

@@ -85,7 +85,11 @@ fn build_mac_app() -> Result<()> {
 
 fn test_swift() -> Result<()> {
     let status = std::process::Command::new("swift")
-        .args(&["test", "--package-path", "./packages/SenalingCore"])
+        .args(&[
+            "test",
+            "--package-path=./packages/SenalingCore",
+            "--package-path=./packages/SenalingMacros",
+        ])
         .status()
         .with_context(|| "Failed to execute swift")?;
 

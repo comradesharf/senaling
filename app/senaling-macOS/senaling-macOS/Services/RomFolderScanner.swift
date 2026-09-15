@@ -7,6 +7,7 @@
 import Foundation
 import OSLog
 import SenalingCore
+import SenalingMacros
 import SwiftData
 import SwiftUI
 
@@ -14,27 +15,27 @@ protocol IRomFolderScanner {
 
   var isScanning: Bool { get }
 
-  func run(folderURL: URL, handler: @escaping (Data, RomInspection) -> Void)
+  func run(folderURL: URL)
 
   func cancel()
 }
 
 @Observable
+@Logged
 final class RomFolderScanner: IRomFolderScanner {
 
-  private static let logger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "comradesharf",
-    category: String(describing: RomFolderScanner.self)
-  )
+  nonisolated private let runner: Runner
 
-  private let runner = Runner()
+  init(modelContainer: ModelContainer) {
+    self.runner = Runner(modelContainer: modelContainer)
+  }
 
   private(set) var isScanning = false
 
-  func run(folderURL: URL, handler: @escaping (Data, RomInspection) -> Void) {
+  func run(folderURL: URL) {
     Task {
       isScanning = true
-      await runner.run(folderURL, handler: handler)
+      await runner.run(folderURL)
       isScanning = false
     }
   }
@@ -46,7 +47,7 @@ final class RomFolderScanner: IRomFolderScanner {
     }
   }
 
-  struct RomFileAsyncIterator: AsyncSequence {
+  nonisolated private struct RomFileAsyncIterator: AsyncSequence {
 
     typealias Element = (Data, RomInspection)
 
@@ -56,13 +57,9 @@ final class RomFolderScanner: IRomFolderScanner {
       AsyncIterator(folderURL)
     }
 
-    struct AsyncIterator: AsyncIteratorProtocol {
+    @Logged
+    nonisolated struct AsyncIterator: AsyncIteratorProtocol {
       typealias Element = (Data, RomInspection)
-
-      private static let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "comradesharf",
-        category: String(describing: AsyncIterator.self)
-      )
 
       private let keys: Set<URLResourceKey> = [
         .isRegularFileKey,
@@ -134,19 +131,13 @@ final class RomFolderScanner: IRomFolderScanner {
     }
   }
 
-  private actor Runner: Sendable {
-
-    private static let logger = Logger(
-      subsystem: Bundle.main.bundleIdentifier ?? "comradesharf",
-      category: String(describing: RomFolderScanner.self)
-    )
+  @Logged
+  @ModelActor
+  nonisolated actor Runner: Sendable {
 
     private var workerTask: Task<Void, Never>?
 
-    func run(
-      _ folderURL: URL,
-      handler: @escaping (Data, RomInspection) -> Void
-    ) {
+    func run(_ folderURL: URL) {
       guard workerTask == nil else {
         Self.logger.debug("Existing task is still running")
         return
@@ -163,10 +154,24 @@ final class RomFolderScanner: IRomFolderScanner {
 
           Self.logger.debug("Running task: \(folderURL)")
 
-          for try await (bookmark, romInspection) in RomFileAsyncIterator(folderURL: folderURL) {
-            handler(bookmark, romInspection)
+          for try await (bookmark, romInspection) in RomFileAsyncIterator(
+            folderURL: folderURL
+          ) {
+            let romFile = RomFile(
+              bookmark: bookmark,
+              romInspection: romInspection
+            )
+            do {
+              modelContext.insert(romFile)
+              try modelContext.save()
+            } catch {
+              Self.logger.error("Unable to save \(romFile). Reason: \(error)")
+            }
           }
+        } catch is CancellationError {
+          cancel()
         } catch {
+          Self.logger.warning("Unable to iterate. Reason: \(error)")
           cancel()
         }
       }
@@ -192,15 +197,11 @@ final class MockRomFolderScanner: IRomFolderScanner {
     self.isScanning = isScanning
   }
 
-  func run(folderURL: URL, handler: @escaping (Data, SenalingCore.RomInspection) -> Void) {
+  func run(folderURL: URL) {
     isScanning = true
   }
 
   func cancel() {
     isScanning = false
   }
-}
-
-extension EnvironmentValues {
-  @Entry var romFolderScanner: IRomFolderScanner = RomFolderScanner()
 }
