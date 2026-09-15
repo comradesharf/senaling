@@ -35,15 +35,15 @@ final class RomFolderScanner: IRomFolderScanner {
   func run(folderURL: URL) {
     Task {
       isScanning = true
-      await runner.run(folderURL)
-      isScanning = false
+      await runner.run(folderURL) { [weak self] in
+        self?.isScanning = false
+      }
     }
   }
 
   func cancel() {
     Task {
       await runner.cancel()
-      isScanning = false
     }
   }
 
@@ -137,13 +137,18 @@ final class RomFolderScanner: IRomFolderScanner {
 
     private var workerTask: Task<Void, Never>?
 
-    func run(_ folderURL: URL) {
+    func run(_ folderURL: URL, onComplete: @escaping () -> Void) {
       guard workerTask == nil else {
         Self.logger.debug("Existing task is still running")
         return
       }
 
       workerTask = Task {
+        defer {
+          onComplete()
+          workerTask = nil
+        }
+
         do {
           let didStart = folderURL.startAccessingSecurityScopedResource()
           defer {
@@ -169,16 +174,14 @@ final class RomFolderScanner: IRomFolderScanner {
             }
           }
         } catch is CancellationError {
-          cancel()
+          Self.logger.debug("Job cancelled")
         } catch {
           Self.logger.warning("Unable to iterate. Reason: \(error)")
-          cancel()
         }
       }
     }
 
     func cancel() {
-      Self.logger.debug("Cancelling running task")
       workerTask?.cancel()
       workerTask = nil
       Self.logger.debug("Running task cancelled")

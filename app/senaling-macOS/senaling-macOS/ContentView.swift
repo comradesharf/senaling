@@ -24,7 +24,7 @@ struct ContentView: View {
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
         Button(action: onButtonClick) {
-          Label("Test", systemImage: "folder.badge.plus")
+          Label("Add Folder", systemImage: "folder.badge.plus")
         }
         .romFolderPicker(isPresented: $isPresented)
       }

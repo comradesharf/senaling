@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/senaling.iml" filepath="$PROJECT_DIR$/.idea/senaling.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/senaling2.iml" filepath="$PROJECT_DIR$/.idea/senaling2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/senaling3.iml" filepath="$PROJECT_DIR$/.idea/senaling3.iml" />
     </modules>
   </component>
 </project>

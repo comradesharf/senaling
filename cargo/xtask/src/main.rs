@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
 
 fn build_xcframework() -> Result<()> {
     let status = std::process::Command::new("cargo")
@@ -84,20 +84,19 @@ fn build_mac_app() -> Result<()> {
 }
 
 fn test_swift() -> Result<()> {
-    let status = std::process::Command::new("swift")
-        .args(&[
-            "test",
-            "--package-path=./packages/SenalingCore",
-            "--package-path=./packages/SenalingMacros",
-        ])
-        .status()
-        .with_context(|| "Failed to execute swift")?;
+    ["./packages/SenalingCore", "./packages/SenalingMacros"]
+        .into_iter()
+        .try_for_each(|path| {
+            let status = std::process::Command::new("swift")
+                .args(&["test", "--package-path", path])
+                .status()
+                .with_context(|| format!("Failed to execute swift test for {}", path))?;
 
-    if !status.success() {
-        return Err(anyhow!("swift failed with status: {}", status));
-    }
-
-    Ok(())
+            if !status.success() {
+                bail!("swift test failed for {} with status: {}", path, status);
+            }
+            Ok(())
+        })
 }
 
 fn main() -> Result<()> {
