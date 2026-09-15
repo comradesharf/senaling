@@ -1,4 +1,4 @@
-pub mod signature_check;
+pub mod rom_inspection;
 
 #[cfg(feature = "headers")]
 pub fn generate_headers() -> ::std::io::Result<()> {

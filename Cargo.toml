@@ -15,5 +15,6 @@ name = "senaling"
 
 [workspace.dependencies]
 anyhow = "1.0.104"
+libc = "0.2.180"
 log = "0.4.34"
 safer-ffi = "0.1.13"

@@ -4,6 +4,8 @@ edition.workspace = true
 version.workspace = true
 
 [dependencies]
+anyhow.workspace = true
+libc.workspace = true
 safer-ffi = {
     features = ["log"],
     workspace = true
