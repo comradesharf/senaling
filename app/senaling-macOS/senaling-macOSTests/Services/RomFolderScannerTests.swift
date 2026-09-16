@@ -9,7 +9,7 @@ import Testing
 
 @testable import senaling_macOS
 
-struct RomScanTests {
+struct RomFolderScannerTests {
 
   @MainActor @Test func scanReturnsOnlySuccessfullyInspectedRomFiles() async throws {
     let fileManager = FileManager.default

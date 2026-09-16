@@ -12,7 +12,10 @@ extension ModelContainer {
 
   static var shared: ModelContainer = {
     let schema = Schema([
-      RomFile.self
+      RomFile.self,
+      RomHeaderInformation.self,
+      GameInformation.self,
+      RomInformation.self,
     ])
 
     let modelConfiguration = ModelConfiguration(
@@ -30,6 +33,10 @@ extension ModelContainer {
 extension EnvironmentValues {
 
   @Entry var romFolderScanner: IRomFolderScanner = RomFolderScanner(
+    modelContainer: ModelContainer.shared
+  )
+
+  @Entry var romDatabaseUpdater: RomDatabaseUpdater = RomDatabaseUpdater(
     modelContainer: ModelContainer.shared
   )
 }
