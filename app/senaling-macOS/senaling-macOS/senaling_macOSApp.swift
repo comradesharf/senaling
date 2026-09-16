@@ -13,8 +13,8 @@ import SwiftUI
 struct senaling_macOSApp: App {
 
   var body: some Scene {
-    WindowGroup {
-      ContentView()
+    Window("Main", id: "main") {
+      MainView()
     }
     .sharedContainer()
   }

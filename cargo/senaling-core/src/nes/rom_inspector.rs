@@ -27,7 +27,15 @@ impl RomInspector for NesRomInspector {
     fn inspect(&self, reader: &mut dyn Read) -> Result<RomInspection> {
         let leading_bytes = read_signature(reader)?;
         let format = inspect_format(&leading_bytes)?;
-        let (size, hashes) = hash_file(reader, &leading_bytes)?;
+        // No-Intro's NES hashes identify the ROM contents, not the emulator
+        // container header. Keep the on-disk size above, but omit the 16-byte
+        // iNES/NES 2.0 header from the reported hashes.
+        let hash_prefix_length = if leading_bytes.starts_with(b"NES\x1a") {
+            16
+        } else {
+            0
+        };
+        let (size, hashes) = hash_file(reader, &leading_bytes, hash_prefix_length)?;
 
         Ok(RomInspection {
             file: FileInfo { size },
@@ -100,7 +108,11 @@ fn read_signature(reader: &mut dyn Read) -> Result<Vec<u8>> {
     Ok(signature)
 }
 
-fn hash_file(reader: &mut dyn Read, leading_bytes: &[u8]) -> Result<(u64, Hashes)> {
+fn hash_file(
+    reader: &mut dyn Read,
+    leading_bytes: &[u8],
+    skipped_prefix_length: usize,
+) -> Result<(u64, Hashes)> {
     let mut buffer = [0_u8; READ_BUFFER_SIZE];
     let mut size = leading_bytes.len() as u64;
     let mut crc32 = Crc32Hasher::new();
@@ -108,10 +120,13 @@ fn hash_file(reader: &mut dyn Read, leading_bytes: &[u8]) -> Result<(u64, Hashes
     let mut sha1 = Sha1::new();
     let mut sha256 = Sha256::new();
 
-    crc32.update(leading_bytes);
-    md5.update(leading_bytes);
-    sha1.update(leading_bytes);
-    sha256.update(leading_bytes);
+    let hashable_leading_bytes = leading_bytes
+        .get(skipped_prefix_length..)
+        .context("hash prefix is larger than the inspected bytes")?;
+    crc32.update(hashable_leading_bytes);
+    md5.update(hashable_leading_bytes);
+    sha1.update(hashable_leading_bytes);
+    sha256.update(hashable_leading_bytes);
 
     loop {
         let bytes_read = reader
@@ -220,9 +235,28 @@ mod tests {
 
     #[test]
     fn calculates_all_hashes_without_buffering_the_entire_file() -> Result<()> {
-        let (size, hashes) = hash_file(&mut &b""[..], b"abc")?;
+        let (size, hashes) = hash_file(&mut &b""[..], b"abc", 0)?;
 
         assert_eq!(size, 3);
+        assert_eq!(hashes.crc32, "352441c2");
+        assert_eq!(hashes.md5, "900150983cd24fb0d6963f7d28e17f72");
+        assert_eq!(hashes.sha1, "a9993e364706816aba3e25717850c26c9cd0d89d");
+        assert_eq!(
+            hashes.sha256,
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn calculates_no_intro_hash_without_the_ines_header() -> Result<()> {
+        let mut headered_rom = [0_u8; 19];
+        headered_rom[..4].copy_from_slice(b"NES\x1a");
+        headered_rom[16..].copy_from_slice(b"abc");
+
+        let (_, hashes) = hash_file(&mut &b""[..], &headered_rom, 16)?;
+
         assert_eq!(hashes.crc32, "352441c2");
         assert_eq!(hashes.md5, "900150983cd24fb0d6963f7d28e17f72");
         assert_eq!(hashes.sha1, "a9993e364706816aba3e25717850c26c9cd0d89d");

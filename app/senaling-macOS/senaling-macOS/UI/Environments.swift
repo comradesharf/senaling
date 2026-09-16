@@ -34,7 +34,7 @@ extension EnvironmentValues {
   )
 }
 
-extension WindowGroup {
+extension Window {
 
   func sharedContainer() -> some Scene {
     self.modelContainer(ModelContainer.shared)
